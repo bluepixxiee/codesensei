@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Review — CodeSensei</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #05010f; --surface: #0d0a1a; --surface2: #13102a;
+      --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.13);
+      --accent: #6366f1; --accent2: #a78bfa; --accent3: #fcd34d;
+      --green: #10b981; --red: #f43f5e; --amber: #f59e0b;
+      --text: #f5f3ee; --muted: #6b7280; --muted2: #9ca3af;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .orb { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+    .orb-1 { width: 500px; height: 500px; background: rgba(99,102,241,0.08); top: -150px; left: -100px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(167,139,250,0.05); bottom: 0; right: -100px; }
+
+    nav { padding: 18px 48px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(5,1,15,0.8); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; }
+    .logo { font-family: 'General Sans', sans-serif; font-size: 18px; font-weight: 700; text-decoration: none; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .logo-icon { width: 26px; height: 26px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .logo span { color: var(--accent2); }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; border-radius: 100px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; box-shadow: 0 4px 16px rgba(99,102,241,0.3); }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-ghost { background: rgba(255,255,255,0.05); color: var(--muted2); border: 1px solid var(--border-bright); }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-large { padding: 13px 32px; font-size: 15px; width: 100%; justify-content: center; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 48px 24px 80px; position: relative; z-index: 1; }
+    .page-header { margin-bottom: 32px; }
+    .page-header h1 { font-family: 'General Sans', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -1px; margin-bottom: 4px; }
+    .page-header p { font-size: 14px; color: var(--muted2); }
+
+    /* MAIN LAYOUT */
+    .review-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+    /* GLASS CARD */
+    .glass-card { background: rgba(255,255,255,0.01); border-radius: 20px; padding: 28px; position: relative; overflow: hidden; }
+    .glass-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(180deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.04) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.08) 100%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+    .card-title { font-family: 'General Sans', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+
+    /* LANGUAGE SELECTOR */
+    .lang-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+    .lang-btn { padding: 10px 8px; border-radius: 10px; border: 1px solid var(--border-bright); background: rgba(255,255,255,0.02); color: var(--muted2); font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.2s; text-align: center; }
+    .lang-btn:hover { border-color: var(--accent); color: var(--text); }
+    .lang-btn.active { border-color: var(--accent); background: rgba(99,102,241,0.15); color: var(--accent2); font-weight: 600; }
+
+    /* CODE EDITOR */
+    .editor-wrap { position: relative; }
+    .editor-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface2); border-radius: 12px 12px 0 0; padding: 10px 16px; border: 1px solid var(--border-bright); border-bottom: none; }
+    .editor-dots { display: flex; gap: 6px; }
+    .editor-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .editor-lang { font-size: 12px; color: var(--muted); font-weight: 500; }
+    .char-count { font-size: 11px; color: var(--muted); }
+
+    textarea#codeInput {
+      width: 100%;
+      min-height: 320px;
+      background: var(--surface2);
+      border: 1px solid var(--border-bright);
+      border-radius: 0 0 12px 12px;
+      padding: 16px;
+      color: #a8b3c8;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+      tab-size: 2;
+    }
+
+    textarea#codeInput:focus { border-color: var(--accent); }
+    textarea#codeInput::placeholder { color: var(--muted); }
+
+    /* LOADER */
+    .loader { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 48px; }
+    .loader.show { display: flex; }
+    .loader-ring { width: 48px; height: 48px; border: 3px solid rgba(99,102,241,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text { font-size: 14px; color: var(--muted2); text-align: center; }
+    .loader-sub { font-size: 12px; color: var(--muted); }
+
+    /* RESULTS */
+    .results { display: none; }
+    .results.show { display: block; }
+
+    /* SCORE HEADER */
+    .score-header { display: flex; align-items: center; gap: 20px; background: var(--surface2); border-radius: 14px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
+    .score-ring { position: relative; width: 72px; height: 72px; flex-shrink: 0; }
+    .score-ring svg { width: 72px; height: 72px; transform: rotate(-90deg); }
+    .score-ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 6; }
+    .score-ring-fill { fill: none; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 195; stroke-dashoffset: 195; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1); }
+    .score-ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'General Sans', sans-serif; font-size: 16px; font-weight: 700; }
+    .score-info h3 { font-family: 'General Sans', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .score-info p { font-size: 13px; color: var(--muted2); line-height: 1.5; }
+
+    /* ISSUE CARDS */
+    .issues-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .issue-card { background: var(--surface2); border-radius: 14px; padding: 16px; border: 1px solid var(--border); transition: border-color 0.2s; }
+    .issue-card:hover { border-color: var(--border-bright); }
+    .issue-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .issue-type { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .type-bug { background: rgba(244,63,94,0.15); color: #fb7185; }
+    .type-security { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .type-performance { background: rgba(99,102,241,0.15); color: #818cf8; }
+    .type-style { background: rgba(16,185,129,0.15); color: #34d399; }
+    .issue-severity { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+    .sev-high { background: rgba(244,63,94,0.1); color: #f87171; }
+    .sev-medium { background: rgba(245,158,11,0.1); color: #fbbf24; }
+    .sev-low { background: rgba(16,185,129,0.1); color: #34d399; }
+    .issue-line { font-size: 11px; color: var(--muted); margin-left: auto; font-family: 'Courier New', monospace; }
+    .issue-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .issue-desc { font-size: 13px; color: var(--muted2); line-height: 1.6; margin-bottom: 10px; }
+    .issue-fix { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #6ee7b7; font-family: 'Courier New', monospace; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+    .issue-lesson { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; background: rgba(99,102,241,0.06); border-radius: 8px; padding: 10px 12px; }
+    .lesson-icon { font-size: 14px; flex-shrink: 0; }
+    .lesson-text { font-size: 12px; color: var(--muted2); line-height: 1.6; }
+
+    /* STRENGTHS */
+    .strengths { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
+    .strengths-title { font-size: 13px; font-weight: 600; color: #34d399; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .strength-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--muted2); margin-bottom: 6px; line-height: 1.5; }
+    .strength-item:last-child { margin-bottom: 0; }
+
+    /* TOP LEARNING */
+    .top-learning { background: rgba(252,211,77,0.06); border: 1px solid rgba(252,211,77,0.15); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
+    .learning-title { font-size: 13px; font-weight: 600; color: var(--accent3); margin-bottom: 6px; }
+    .learning-text { font-size: 13px; color: var(--muted2); line-height: 1.6; }
+
+    /* EMPTY STATE */
+    .no-issues { text-align: center; padding: 40px; }
+    .no-issues-icon { font-size: 40px; margin-bottom: 12px; }
+    .no-issues h3 { font-size: 16px; font-weight: 600; color: var(--green); margin-bottom: 6px; }
+    .no-issues p { font-size: 13px; color: var(--muted2); }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .container { animation: fadeUp 0.5s ease both; }
+    .issue-card { animation: fadeUp 0.4s ease both; }
+  </style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon">⚡</div>
+    Code<span>Sensei</span>
+  </a>
+  <div style="display:flex; gap:8px;">
+    <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Code Review</h1>
+    <p>Paste your code and get instant AI-powered feedback with explanations.</p>
+  </div>
+
+  <div class="review-layout">
+
+    <!-- LEFT: INPUT -->
+    <div>
+      <div class="glass-card">
+        <div class="card-title">⚡ Submit Code</div>
+
+        <div style="margin-bottom:12px;">
+          <div style="font-size:12px; font-weight:600; color:var(--muted2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Language</div>
+          <div class="lang-grid">
+            {% for lang in ['Python', 'JavaScript', 'Java', 'C++', 'TypeScript', 'Go', 'Rust', 'SQL'] %}
+              <button class="lang-btn {% if lang == 'Python' %}active{% endif %}" onclick="selectLang(this, '{{ lang }}')">{{ lang }}</button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="editor-wrap">
+          <div class="editor-bar">
+            <div class="editor-dots">
+              <div class="editor-dot dot-r"></div>
+              <div class="editor-dot dot-y"></div>
+              <div class="editor-dot dot-g"></div>
+            </div>
+            <span class="editor-lang" id="editorLang">Python</span>
+            <span class="char-count" id="charCount">0 / 5000</span>
+          </div>
+          <textarea id="codeInput" placeholder="# Paste your code here...
+def example():
+    pass" oninput="updateCount()"></textarea>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary btn-large" id="reviewBtn" onclick="submitReview()">
+            ⚡ Review My Code
+          </button>
+        </div>
+
+        <div style="margin-top:12px; font-size:12px; color:var(--muted); text-align:center;">
+          Powered by Llama 3 70B via Groq · Results in ~5 seconds
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: OUTPUT -->
+    <div>
+      <div class="glass-card">
+        <div class="card-title">📋 Review Results</div>
+
+        <!-- DEFAULT STATE -->
+        <div id="defaultState" style="text-align:center; padding:60px 20px;">
+          <div style="font-size:48px; margin-bottom:16px;">🔍</div>
+          <div style="font-size:15px; font-weight:500; color:var(--muted2); margin-bottom:8px;">Ready to review</div>
+          <div style="font-size:13px; color:var(--muted);">Paste your code on the left and hit Review.</div>
+        </div>
+
+        <!-- LOADER -->
+        <div class="loader" id="loader">
+          <div class="loader-ring"></div>
+          <div class="loader-text">Analyzing your code...</div>
+          <div class="loader-sub">Llama 3 70B is reviewing for bugs, security issues, and more</div>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="results" id="results">
+
+          <!-- SCORE -->
+          <div class="score-header">
+            <div class="score-ring">
+              <svg viewBox="0 0 72 72">
+                <circle class="score-ring-bg" cx="36" cy="36" r="31"/>
+                <circle class="score-ring-fill" id="scoreRingFill" cx="36" cy="36" r="31"/>
+              </svg>
+              <div class="score-ring-num" id="scoreNum">0</div>
+            </div>
+            <div class="score-info">
+              <h3 id="scoreLabel">Analyzing...</h3>
+              <p id="scoreSummary"></p>
+            </div>
+          </div>
+
+          <!-- STRENGTHS -->
+          <div class="strengths" id="strengthsBox" style="display:none;">
+            <div class="strengths-title">✅ What you did well</div>
+            <div id="strengthsList"></div>
+          </div>
+
+          <!-- TOP LEARNING -->
+          <div class="top-learning" id="learningBox" style="display:none;">
+            <div class="learning-title">📚 Top thing to learn next</div>
+            <div class="learning-text" id="learningText"></div>
+          </div>
+
+          <!-- ISSUES -->
+          <div id="issuesContainer"></div>
+
+          <!-- VIEW FULL REPORT -->
+          <a id="reportLink" href="#" class="btn btn-primary btn-large" style="margin-top:8px; display:none;">
+            📊 View Full Report →
+          </a>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let selectedLang = 'Python';
+  let currentReviewId = null;
+
+  function selectLang(btn, lang) {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedLang = lang;
+    document.getElementById('editorLang').textContent = lang;
+    const ta = document.getElementById('codeInput');
+    const placeholders = {
+      'Python': '# Paste your Python code here...\ndef example():\n    pass',
+      'JavaScript': '// Paste your JavaScript code here...\nfunction example() {\n  \n}',
+      'Java': '// Paste your Java code here...\npublic class Example {\n  \n}',
+      'C++': '// Paste your C++ code here...\n#include <iostream>\nint main() {\n  \n}',
+      'TypeScript': '// Paste your TypeScript code here...\nfunction example(): void {\n  \n}',
+      'Go': '// Paste your Go code here...\npackage main\nfunc main() {\n  \n}',
+      'Rust': '// Paste your Rust code here...\nfn main() {\n  \n}',
+      'SQL': '-- Paste your SQL code here...\nSELECT * FROM table_name;'
+    };
+    ta.placeholder = placeholders[lang] || '// Paste your code here...';
+  }
+
+  function updateCount() {
+    const len = document.getElementById('codeInput').value.length;
+    const el = document.getElementById('charCount');
+    el.textContent = `${len} / 5000`;
+    el.style.color = len > 4500 ? '#f43f5e' : 'var(--muted)';
+  }
+
+  async function submitReview() {
+    const code = document.getElementById('codeInput').value.trim();
+    if (!code) { alert('Please paste some code first.'); return; }
+    if (code.length > 5000) { alert('Code is too long — max 5000 characters.'); return; }
+
+    document.getElementById('defaultState').style.display = 'none';
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('loader').classList.add('show');
+    document.getElementById('reviewBtn').disabled = true;
+    document.getElementById('reviewBtn').textContent = '⏳ Reviewing...';
+
+    try {
+      const res = await fetch('/api/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, language: selectedLang })
+      });
+      const data = await res.json();
+
+      if (data.error) { alert('Error: ' + data.error); return; }
+
+      currentReviewId = data.review_id;
+      renderResults(data.result);
+
+    } catch(e) {
+      alert('Something went wrong: ' + e.message);
+    } finally {
+      document.getElementById('loader').classList.remove('show');
+      document.getElementById('reviewBtn').disabled = false;
+      document.getElementById('reviewBtn').textContent = '⚡ Review My Code';
+    }
+  }
+
+  function renderResults(result) {
+    const score = result.overall_score || 0;
+    const issues = result.issues || [];
+    const strengths = result.strengths || [];
+    const summary = result.summary || '';
+    const topLearning = result.top_learning || '';
+
+    // score ring
+    const circumference = 2 * Math.PI * 31;
+    const offset = circumference - (score / 100) * circumference;
+    const fill = document.getElementById('scoreRingFill');
+    const color = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#f43f5e';
+    fill.style.stroke = color;
+    fill.style.strokeDasharray = circumference;
+    setTimeout(() => { fill.style.strokeDashoffset = offset; }, 100);
+    document.getElementById('scoreNum').textContent = score;
+    document.getElementById('scoreNum').style.color = color;
+
+    const label = score >= 70 ? '✨ Good code' : score >= 50 ? '⚠️ Needs work' : '🔴 Major issues';
+    document.getElementById('scoreLabel').textContent = label;
+    document.getElementById('scoreSummary').textContent = summary;
+
+    // strengths
+    if (strengths.length > 0) {
+      document.getElementById('strengthsBox').style.display = 'block';
+      document.getElementById('strengthsList').innerHTML = strengths.map(s =>
+        `<div class="strength-item"><span>✓</span>${s}</div>`
+      ).join('');
+    }
+
+    // top learning
+    if (topLearning) {
+      document.getElementById('learningBox').style.display = 'block';
+      document.getElementById('learningText').textContent = topLearning;
+    }
+
+    // issues
+    const container = document.getElementById('issuesContainer');
+    if (issues.length === 0) {
+      container.innerHTML = `
+        <div class="no-issues">
+          <div class="no-issues-icon">🎉</div>
+          <h3>No issues found!</h3>
+          <p>Your code looks clean. Keep it up!</p>
+        </div>`;
+    } else {
+      container.innerHTML = `
+        <div style="font-size:13px; font-weight:600; color:var(--muted2); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.06em;">
+          ${issues.length} issue${issues.length > 1 ? 's' : ''} found
+        </div>
+        <div class="issues-list">
+          ${issues.map(issue => `
+            <div class="issue-card">
+              <div class="issue-header">
+                <span class="issue-type type-${issue.type || 'style'}">${issue.type || 'style'}</span>
+                <span class="issue-severity sev-${issue.severity || 'medium'}">${issue.severity || 'medium'}</span>
+                ${issue.line ? `<span class="issue-line">Line ${issue.line}</span>` : ''}
+              </div>
+              <div class="issue-title">${issue.title || 'Issue detected'}</div>
+              <div class="issue-desc">${issue.description || ''}</div>
+              ${issue.fix ? `<div class="issue-fix">${escapeHtml(issue.fix)}</div>` : ''}
+              ${issue.lesson ? `
+                <div class="issue-lesson">
+                  <span class="lesson-icon">💡</span>
+                  <span class="lesson-text">${issue.lesson}</span>
+                </div>` : ''}
+            </div>`).join('')}
+        </div>`;
+    }
+
+    // report link
+    if (currentReviewId) {
+      const link = document.getElementById('reportLink');
+      link.href = `/report/${currentReviewId}`;
+      link.style.display = 'flex';
+    }
+
+    document.getElementById('results').classList.add('show');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+</body>
+</html>

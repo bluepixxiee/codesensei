@@ -1,0 +1,28 @@
+# virtual environment
+venv/
+
+# python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# environment variables (NEVER push this)
+.env
+
+# database
+instance/
+*.db
+
+# uploads folder
+uploads/
+
+# reports folder
+reports/
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini

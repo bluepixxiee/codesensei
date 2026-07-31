@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CodeSensei — AI Code Mentor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #05010f;
+      --surface: #0d0a1a;
+      --surface2: #13102a;
+      --border: rgba(255,255,255,0.07);
+      --border-bright: rgba(255,255,255,0.13);
+      --accent: #6366f1;
+      --accent2: #a78bfa;
+      --accent3: #fcd34d;
+      --green: #10b981;
+      --text: #f5f3ee;
+      --muted: #6b7280;
+      --muted2: #9ca3af;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ── GLOW ORBS ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 { width: 600px; height: 600px; background: rgba(99,102,241,0.12); top: -200px; left: -100px; }
+    .orb-2 { width: 500px; height: 500px; background: rgba(167,139,250,0.08); top: 200px; right: -150px; }
+    .orb-3 { width: 400px; height: 400px; background: rgba(252,211,77,0.05); bottom: -100px; left: 30%; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 20px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(5,1,15,0.7);
+      backdrop-filter: blur(20px);
+    }
+
+    .logo {
+      font-family: 'General Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .logo span { color: var(--accent2); }
+
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+
+    .nav-link {
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s;
+      color: var(--muted2);
+    }
+
+    .nav-link:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: white;
+      box-shadow: 0 4px 24px rgba(99,102,241,0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 32px rgba(99,102,241,0.45);
+    }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      border: 1px solid var(--border-bright);
+    }
+
+    .btn-ghost:hover { background: rgba(255,255,255,0.09); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 140px 24px 80px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 13px;
+      color: var(--accent2);
+      font-weight: 500;
+      margin-bottom: 32px;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent2);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .hero h1 {
+      font-family: 'General Sans', sans-serif;
+      font-size: clamp(64px, 11vw, 140px);
+      font-weight: 700;
+      line-height: 1.0;
+      letter-spacing: -5px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.7s ease 0.1s both;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--muted2);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+      animation: fadeUp 0.7s ease 0.2s both;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 80px;
+      animation: fadeUp 0.7s ease 0.3s both;
+    }
+
+    .hero-cta .btn { padding: 14px 28px; font-size: 15px; }
+
+    /* ── CODE PREVIEW ── */
+    .code-preview {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+      animation: fadeUp 0.7s ease 0.4s both;
+    }
+
+    .code-window {
+      background: var(--surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    .window-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .window-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .window-title {
+      margin-left: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .code-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 280px;
+    }
+
+    .code-input {
+      padding: 20px;
+      border-right: 1px solid var(--border);
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--muted2);
+    }
+
+    .code-input .line { display: flex; gap: 16px; }
+    .line-num { color: var(--muted); min-width: 20px; user-select: none; }
+    .kw { color: #c792ea; }
+    .fn { color: #82aaff; }
+    .str { color: #c3e88d; }
+    .cm { color: #546e7a; font-style: italic; }
+    .err-line { background: rgba(244,63,94,0.08); border-left: 2px solid #f43f5e; margin: 0 -20px; padding: 0 20px; }
+
+    .code-output {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .output-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .issue-chip {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      animation: slideIn 0.5s ease both;
+    }
+
+    .issue-chip:nth-child(2) { animation-delay: 0.1s; }
+    .issue-chip:nth-child(3) { animation-delay: 0.2s; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(12px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .chip-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+    .chip-content { flex: 1; }
+
+    .chip-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .chip-desc { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+
+    .chip-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .tag-bug { background: rgba(244,63,94,0.15); color: #fb7185; }
+    .tag-security { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .tag-perf { background: rgba(99,102,241,0.15); color: #818cf8; }
+
+    /* ── FEATURES ── */
+    .section {
+      position: relative;
+      z-index: 1;
+      padding: 100px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-badge {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent2);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'General Sans', sans-serif;
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      text-align: center;
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+
+    .section-sub {
+      font-size: 16px;
+      color: var(--muted2);
+      text-align: center;
+      max-width: 480px;
+      margin: 0 auto 64px;
+      line-height: 1.7;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    /* liquid glass card */
+    .glass-card {
+      background: rgba(255,255,255,0.01);
+      backdrop-filter: blur(4px);
+      border-radius: 20px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.15) 0%,
+        rgba(255,255,255,0.05) 30%,
+        rgba(255,255,255,0) 60%,
+        rgba(255,255,255,0.05) 80%,
+        rgba(255,255,255,0.15) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.2);
+    }
+
+    .feature-title {
+      font-family: 'General Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .feature-desc { font-size: 13px; color: var(--muted2); line-height: 1.7; }
+
+    /* ── HOW IT WORKS ── */
+    .steps-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      position: relative;
+    }
+
+    .steps-row::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: 12%;
+      right: 12%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-bright), transparent);
+    }
+
+    .step-card { text-align: center; padding: 20px 12px; }
+
+    .step-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'General Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent2);
+      margin: 0 auto 16px;
+      position: relative;
+      z-index: 1;
+      border: 1px solid var(--border-bright);
+    }
+
+    .step-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .step-desc { font-size: 12px; color: var(--muted2); line-height: 1.6; }
+
+    /* ── CTA ── */
+    .cta-section {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 60px 24px 120px;
+    }
+
+    .cta-card {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 64px 48px;
+      border-radius: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(99,102,241,0.5), rgba(167,139,250,0.2), rgba(252,211,77,0.3));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .cta-card h2 {
+      font-family: 'General Sans', sans-serif;
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      margin-bottom: 12px;
+      line-height: 1.1;
+    }
+
+    .cta-card p { font-size: 16px; color: var(--muted2); margin-bottom: 32px; line-height: 1.6; }
+
+    /* ── MARQUEE ── */
+    .marquee-section {
+      position: relative;
+      z-index: 1;
+      padding: 40px 0 60px;
+      overflow: hidden;
+    }
+
+    .marquee-label {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 20px;
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 32px;
+      animation: marquee 25s linear infinite;
+      width: max-content;
+    }
+
+    .marquee-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .marquee-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    footer span { color: var(--accent2); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- BACKGROUND VIDEO -->
+<div style="position:fixed; inset:0; z-index:0; overflow:hidden;">
+  <video id="bgVideo" muted playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0;">
+    <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_065045_c44942da-53c6-4804-b734-f9e07fc22e08.mp4" type="video/mp4">
+  </video>
+</div>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon">⚡</div>
+    Code<span>Sensei</span>
+  </a>
+  <div class="nav-links">
+    {% if user %}
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/review" class="btn btn-primary">Start Review</a>
+    {% else %}
+      <a href="/login" class="nav-link">Log in</a>
+      <a href="/signup" class="btn btn-primary">Get started free</a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <div class="badge-dot"></div>
+    AI-Powered Code Mentorship
+  </div>
+
+  <h1>
+    Code smarter.<br>
+    <span class="gradient-text">Learn faster.</span>
+  </h1>
+
+  <p class="hero-sub">
+    Paste your code and get instant AI-powered review — bugs caught, security issues flagged, and explanations written for junior developers to actually understand.
+  </p>
+
+  <div class="hero-cta">
+    {% if user %}
+      <a href="/review" class="btn btn-primary">Start a review →</a>
+      <a href="/dashboard" class="btn btn-ghost">My Dashboard</a>
+    {% else %}
+      <a href="/signup" class="btn btn-primary">Start for free →</a>
+      <a href="/login" class="btn btn-ghost">Log in</a>
+    {% endif %}
+  </div>
+
+  <!-- CODE PREVIEW -->
+  <div class="code-preview">
+    <div class="code-window">
+      <div class="window-bar">
+        <div class="window-dot dot-red"></div>
+        <div class="window-dot dot-yellow"></div>
+        <div class="window-dot dot-green"></div>
+        <span class="window-title">main.py — CodeSensei Review</span>
+      </div>
+      <div class="code-body">
+        <div class="code-input">
+          <div class="line"><span class="line-num">1</span><span class="kw">def</span> <span class="fn">get_user</span>(id):</div>
+          <div class="line err-line"><span class="line-num">2</span><span>&nbsp;&nbsp;query = <span class="str">"SELECT * FROM users WHERE id="</span> + id</span></div>
+          <div class="line"><span class="line-num">3</span><span>&nbsp;&nbsp;<span class="kw">return</span> db.execute(query)</span></div>
+          <div class="line"><span class="line-num">4</span><span></span></div>
+          <div class="line"><span class="line-num">5</span><span class="kw">def</span> <span class="fn">process</span>(data):</span></div>
+          <div class="line err-line"><span class="line-num">6</span><span>&nbsp;&nbsp;<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(data)):</span></div>
+          <div class="line"><span class="line-num">7</span><span>&nbsp;&nbsp;&nbsp;&nbsp;print(data[i])</span></div>
+          <div class="line"><span class="line-num">8</span><span class="cm">&nbsp;&nbsp;# TODO: add error handling</span></div>
+        </div>
+        <div class="code-output">
+          <div class="output-label">CodeSensei found 3 issues</div>
+          <div class="issue-chip">
+            <div class="chip-icon">🔴</div>
+            <div class="chip-content">
+              <div class="chip-tag tag-security">Security</div>
+              <div class="chip-title">SQL Injection Risk — Line 2</div>
+              <div class="chip-desc">Never concatenate user input into SQL. Use parameterized queries instead.</div>
+            </div>
+          </div>
+          <div class="issue-chip">
+            <div class="chip-icon">🟡</div>
+            <div class="chip-content">
+              <div class="chip-tag tag-perf">Performance</div>
+              <div class="chip-title">Inefficient Loop — Line 6</div>
+              <div class="chip-desc">Use `for item in data` instead of indexing — it's faster and more Pythonic.</div>
+            </div>
+          </div>
+          <div class="issue-chip">
+            <div class="chip-icon">🟠</div>
+            <div class="chip-content">
+              <div class="chip-tag tag-bug">Bug Risk</div>
+              <div class="chip-title">No Error Handling — Line 8</div>
+              <div class="chip-desc">Database calls can fail. Wrap in try/except to handle connection errors gracefully.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-label">Trusted by developers learning</div>
+  <div class="marquee-track">
+    {% for lang in ['Python', 'JavaScript', 'Java', 'C++', 'TypeScript', 'Go', 'Rust', 'Swift', 'Python', 'JavaScript', 'Java', 'C++', 'TypeScript', 'Go', 'Rust', 'Swift'] %}
+      <div class="marquee-item">
+        <div class="marquee-icon">{{ lang[0] }}</div>
+        {{ lang }}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section">
+  <div class="section-badge">What CodeSensei does</div>
+  <h2 class="section-title">Not just a linter.<br>A <span class="gradient-text">mentor.</span></h2>
+  <p class="section-sub">Every issue comes with an explanation, a fix, and a lesson — so you don't make the same mistake twice.</p>
+
+  <div class="features-grid reveal">
+    <div class="glass-card">
+      <div class="feature-icon">🐛</div>
+      <div class="feature-title">Bug Detection</div>
+      <div class="feature-desc">Catches logic errors, null pointer risks, unhandled exceptions, and off-by-one errors before they hit production.</div>
+    </div>
+    <div class="glass-card">
+      <div class="feature-icon">🔒</div>
+      <div class="feature-title">Security Analysis</div>
+      <div class="feature-desc">Flags SQL injection, XSS vulnerabilities, hardcoded credentials, and insecure data handling with clear explanations.</div>
+    </div>
+    <div class="glass-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">Performance Review</div>
+      <div class="feature-desc">Identifies inefficient loops, unnecessary API calls, memory leaks, and suggests faster alternatives.</div>
+    </div>
+    <div class="glass-card">
+      <div class="feature-icon">📈</div>
+      <div class="feature-title">Pattern Tracking</div>
+      <div class="feature-desc">Remembers your past mistakes. If you make the same error 3 times, CodeSensei tells you what to study.</div>
+    </div>
+    <div class="glass-card">
+      <div class="feature-icon">🧠</div>
+      <div class="feature-title">Plain English Explanations</div>
+      <div class="feature-desc">Every issue is explained for junior developers — not just what's wrong, but why it matters and how to fix it.</div>
+    </div>
+    <div class="glass-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title">Skill Report</div>
+      <div class="feature-desc">Visual dashboard showing your weak areas, improvement over time, and personalized learning recommendations.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" style="padding-top:0;">
+  <div class="section-badge">How it works</div>
+  <h2 class="section-title">Four steps to <span class="gradient-text">better code.</span></h2>
+  <p class="section-sub">From paste to insight in under 30 seconds.</p>
+
+  <div class="steps-row reveal">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-title">Paste your code</div>
+      <div class="step-desc">Paste any code snippet and select your programming language.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-title">AI reviews it</div>
+      <div class="step-desc">Our AI analyzes for bugs, security, performance, and style issues.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-title">Learn from it</div>
+      <div class="step-desc">Every issue comes with an explanation and fix written for beginners.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-title">Track progress</div>
+      <div class="step-desc">Your dashboard tracks patterns and shows your improvement over time.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-card reveal">
+    <h2>Write better code<br><span class="gradient-text">starting today.</span></h2>
+    <p>Join developers who use CodeSensei to learn faster and ship cleaner code.</p>
+    {% if user %}
+      <a href="/review" class="btn btn-primary" style="font-size:15px; padding:14px 32px;">Start a new review →</a>
+    {% else %}
+      <a href="/signup" class="btn btn-primary" style="font-size:15px; padding:14px 32px;">Create free account →</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  Built with ⚡ using Python, Flask & Groq AI · <span>CodeSensei</span>
+</footer>
+
+<script>
+  // scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => {
+      if (el.isIntersecting) { el.target.classList.add("visible"); observer.unobserve(el.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+
+  // background video fade loop
+  const video = document.getElementById("bgVideo");
+  let animFrame;
+
+  function fadeIn() {
+    cancelAnimationFrame(animFrame);
+    const start = performance.now();
+    const duration = 500;
+    function step(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      video.style.opacity = progress * 0.35;
+      if (progress < 1) animFrame = requestAnimationFrame(step);
+    }
+    animFrame = requestAnimationFrame(step);
+  }
+
+  function fadeOut() {
+    cancelAnimationFrame(animFrame);
+    const start = performance.now();
+    const startOpacity = parseFloat(video.style.opacity) || 0.35;
+    const duration = 500;
+    function step(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      video.style.opacity = startOpacity * (1 - progress);
+      if (progress < 1) {
+        animFrame = requestAnimationFrame(step);
+      } else {
+        video.style.opacity = 0;
+        setTimeout(() => {
+          video.currentTime = 0;
+          video.play();
+        }, 100);
+      }
+    }
+    animFrame = requestAnimationFrame(step);
+  }
+
+  video.addEventListener("canplay", () => {
+    video.play();
+    fadeIn();
+  });
+
+  video.addEventListener("timeupdate", () => {
+    if (video.duration && video.currentTime >= video.duration - 0.6) {
+      fadeOut();
+    }
+  });
+
+  video.addEventListener("ended", () => {
+    video.style.opacity = 0;
+    setTimeout(() => {
+      video.currentTime = 0;
+      video.play();
+      fadeIn();
+    }, 100);
+  });
+</script>
+</body>
+</html>

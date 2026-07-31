@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Report — CodeSensei</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #05010f; --surface: #0d0a1a; --surface2: #13102a;
+      --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.13);
+      --accent: #6366f1; --accent2: #a78bfa; --accent3: #fcd34d;
+      --green: #10b981; --red: #f43f5e; --amber: #f59e0b;
+      --text: #f5f3ee; --muted: #6b7280; --muted2: #9ca3af;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .orb { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+    .orb-1 { width: 500px; height: 500px; background: rgba(99,102,241,0.08); top: -150px; left: -100px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(167,139,250,0.05); bottom: 0; right: -100px; }
+
+    nav { padding: 18px 48px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(5,1,15,0.8); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; }
+    .logo { font-family: 'General Sans', sans-serif; font-size: 18px; font-weight: 700; text-decoration: none; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .logo-icon { width: 26px; height: 26px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .logo span { color: var(--accent2); }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; border-radius: 100px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-ghost { background: rgba(255,255,255,0.05); color: var(--muted2); border: 1px solid var(--border-bright); }
+    .btn-ghost:hover { color: var(--text); }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; position: relative; z-index: 1; animation: fadeUp 0.5s ease both; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; flex-wrap: wrap; gap: 16px; }
+    .page-header h1 { font-family: 'General Sans', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -1px; margin-bottom: 4px; }
+    .page-header p { font-size: 14px; color: var(--muted2); }
+
+    .glass-card { background: rgba(255,255,255,0.01); border-radius: 20px; padding: 28px; position: relative; overflow: hidden; margin-bottom: 16px; }
+    .glass-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(180deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.04) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.08) 100%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+    .card-title { font-family: 'General Sans', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.3px; }
+
+    /* SCORE */
+    .score-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .score-stat { background: var(--surface2); border-radius: 14px; padding: 20px; text-align: center; border: 1px solid var(--border); }
+    .score-val { font-family: 'General Sans', sans-serif; font-size: 32px; font-weight: 700; margin-bottom: 4px; }
+    .score-lbl { font-size: 12px; color: var(--muted2); }
+    .c-green { color: var(--green); }
+    .c-amber { color: var(--amber); }
+    .c-red { color: var(--red); }
+    .c-accent { color: var(--accent2); }
+
+    /* OVERALL BAR */
+    .overall-wrap { background: var(--surface2); border-radius: 12px; padding: 18px 20px; margin-top: 14px; border: 1px solid var(--border); }
+    .overall-header { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted2); margin-bottom: 10px; }
+    .overall-header strong { color: var(--text); }
+    .bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+    /* ISSUES */
+    .issue-card { background: var(--surface2); border-radius: 14px; padding: 18px; margin-bottom: 12px; border: 1px solid var(--border); }
+    .issue-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .issue-type { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .type-bug { background: rgba(244,63,94,0.15); color: #fb7185; }
+    .type-security { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .type-performance { background: rgba(99,102,241,0.15); color: #818cf8; }
+    .type-style { background: rgba(16,185,129,0.15); color: #34d399; }
+    .issue-severity { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+    .sev-high { background: rgba(244,63,94,0.1); color: #f87171; }
+    .sev-medium { background: rgba(245,158,11,0.1); color: #fbbf24; }
+    .sev-low { background: rgba(16,185,129,0.1); color: #34d399; }
+    .issue-line { font-size: 11px; color: var(--muted); margin-left: auto; font-family: 'Courier New', monospace; }
+    .issue-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .issue-desc { font-size: 13px; color: var(--muted2); line-height: 1.6; margin-bottom: 10px; }
+    .issue-fix { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #6ee7b7; font-family: 'Courier New', monospace; line-height: 1.6; white-space: pre-wrap; word-break: break-all; margin-bottom: 8px; }
+    .issue-lesson { display: flex; gap: 8px; background: rgba(99,102,241,0.06); border-radius: 8px; padding: 10px 12px; }
+    .lesson-text { font-size: 12px; color: var(--muted2); line-height: 1.6; }
+
+    /* CODE SNIPPET */
+    .code-box { background: var(--surface2); border-radius: 12px; padding: 16px; font-family: 'Courier New', monospace; font-size: 12px; color: var(--muted2); line-height: 1.7; overflow-x: auto; border: 1px solid var(--border); white-space: pre-wrap; word-break: break-all; }
+
+    /* TIPS */
+    .tip-row { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .tip-row:last-child { border-bottom: none; }
+    .tip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .tip-text { font-size: 13px; color: var(--muted2); line-height: 1.6; }
+
+    /* STRENGTHS */
+    .strength-row { display: flex; gap: 8px; padding: 8px 0; font-size: 13px; color: var(--muted2); }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon">⚡</div>
+    Code<span>Sensei</span>
+  </a>
+  <div style="display:flex; gap:8px;">
+    <a href="/review" class="btn btn-primary">+ New Review</a>
+    <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1>Review Report</h1>
+      <p>{{ review.created_at.strftime('%d %b %Y, %I:%M %p') }} · {{ review.language }}</p>
+    </div>
+  </div>
+
+  <!-- SCORE OVERVIEW -->
+  <div class="glass-card">
+    <div class="card-title">📊 Score Overview</div>
+    <div class="score-row">
+      <div class="score-stat">
+        <div class="score-val {% if review.overall_score >= 70 %}c-green{% elif review.overall_score >= 50 %}c-amber{% else %}c-red{% endif %}">
+          {{ review.overall_score }}
+        </div>
+        <div class="score-lbl">Overall Score</div>
+      </div>
+      <div class="score-stat">
+        <div class="score-val c-red">{{ review.issues_count }}</div>
+        <div class="score-lbl">Issues Found</div>
+      </div>
+      <div class="score-stat">
+        <div class="score-val c-accent">{{ review.language }}</div>
+        <div class="score-lbl">Language</div>
+      </div>
+    </div>
+    <div class="overall-wrap">
+      <div class="overall-header">
+        <span>Code Quality</span>
+        <strong>{{ review.overall_score }}/100</strong>
+      </div>
+      <div class="bar">
+        <div class="bar-fill" id="qualityBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ISSUE BREAKDOWN -->
+  <div class="glass-card">
+    <div class="card-title">🔍 Issue Breakdown</div>
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
+      <div style="text-align:center; background:var(--surface2); border-radius:10px; padding:14px; border:1px solid rgba(244,63,94,0.15);">
+        <div style="font-size:22px; font-weight:700; color:#fb7185;">{{ review.bug_count }}</div>
+        <div style="font-size:11px; color:var(--muted2); margin-top:3px;">Bugs</div>
+      </div>
+      <div style="text-align:center; background:var(--surface2); border-radius:10px; padding:14px; border:1px solid rgba(245,158,11,0.15);">
+        <div style="font-size:22px; font-weight:700; color:#fbbf24;">{{ review.security_count }}</div>
+        <div style="font-size:11px; color:var(--muted2); margin-top:3px;">Security</div>
+      </div>
+      <div style="text-align:center; background:var(--surface2); border-radius:10px; padding:14px; border:1px solid rgba(99,102,241,0.15);">
+        <div style="font-size:22px; font-weight:700; color:#818cf8;">{{ review.performance_count }}</div>
+        <div style="font-size:11px; color:var(--muted2); margin-top:3px;">Performance</div>
+      </div>
+      <div style="text-align:center; background:var(--surface2); border-radius:10px; padding:14px; border:1px solid rgba(16,185,129,0.15);">
+        <div style="font-size:22px; font-weight:700; color:#34d399;">{{ review.style_count }}</div>
+        <div style="font-size:11px; color:var(--muted2); margin-top:3px;">Style</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  {% if data.summary %}
+  <div class="glass-card">
+    <div class="card-title">💬 AI Summary</div>
+    <p style="font-size:14px; color:var(--muted2); line-height:1.7;">{{ data.summary }}</p>
+  </div>
+  {% endif %}
+
+  <!-- STRENGTHS -->
+  {% if data.strengths %}
+  <div class="glass-card" style="background:rgba(16,185,129,0.03); border:1px solid rgba(16,185,129,0.1);">
+    <div class="card-title" style="color:#34d399;">✅ What you did well</div>
+    {% for s in data.strengths %}
+      <div class="strength-row"><span>✓</span> {{ s }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- TOP LEARNING -->
+  {% if data.top_learning %}
+  <div class="glass-card" style="background:rgba(252,211,77,0.03); border:1px solid rgba(252,211,77,0.12);">
+    <div class="card-title" style="color:var(--accent3);">📚 Top thing to learn next</div>
+    <p style="font-size:14px; color:var(--muted2); line-height:1.7;">{{ data.top_learning }}</p>
+  </div>
+  {% endif %}
+
+  <!-- ISSUES -->
+  {% if data.issues %}
+  <div class="glass-card">
+    <div class="card-title">⚠️ Issues Found ({{ data.issues | length }})</div>
+    {% for issue in data.issues %}
+      <div class="issue-card">
+        <div class="issue-header">
+          <span class="issue-type type-{{ issue.type | default('style') }}">{{ issue.type | default('style') }}</span>
+          <span class="issue-severity sev-{{ issue.severity | default('medium') }}">{{ issue.severity | default('medium') }}</span>
+          {% if issue.line %}<span class="issue-line">Line {{ issue.line }}</span>{% endif %}
+        </div>
+        <div class="issue-title">{{ issue.title }}</div>
+        <div class="issue-desc">{{ issue.description }}</div>
+        {% if issue.fix %}
+          <div class="issue-fix">{{ issue.fix }}</div>
+        {% endif %}
+        {% if issue.lesson %}
+          <div class="issue-lesson">
+            <span>💡</span>
+            <span class="lesson-text">{{ issue.lesson }}</span>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- CODE SUBMITTED -->
+  <div class="glass-card">
+    <div class="card-title">📄 Code Submitted</div>
+    <div class="code-box">{{ review.code_snippet }}</div>
+  </div>
+
+  <!-- IMPROVEMENT TIPS -->
+  <div class="glass-card">
+    <div class="card-title">💡 General Tips</div>
+    <div class="tip-row"><div class="tip-icon">🔄</div><div class="tip-text">Submit more code regularly — the more you review, the better your pattern tracking becomes.</div></div>
+    <div class="tip-row"><div class="tip-icon">📖</div><div class="tip-text">Focus on the "Top thing to learn next" — mastering one concept at a time is more effective than studying broadly.</div></div>
+    <div class="tip-row"><div class="tip-icon">🔒</div><div class="tip-text">Always prioritize fixing High severity issues first — they represent the most critical risks in your code.</div></div>
+    <div class="tip-row"><div class="tip-icon">⚡</div><div class="tip-text">After fixing the issues, resubmit the same code to see your score improve in real time.</div></div>
+  </div>
+
+</div>
+
+<script>
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('qualityBar').style.width = '{{ review.overall_score }}%';
+    }, 300);
+  });
+</script>
+</body>
+</html>
