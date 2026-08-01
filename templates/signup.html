@@ -86,7 +86,7 @@
     try {
       const res = await fetch("/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password }) });
       const data = await res.json();
-      if (data.success) { window.location.href = "/dashboard"; }
+      if (data.success) { window.location.href = data.redirect; }
       else { errorBox.textContent = data.error; errorBox.style.display = "block"; btn.disabled = false; btn.textContent = "Create free account"; }
     } catch(e) { errorBox.textContent = "Something went wrong."; errorBox.style.display = "block"; btn.disabled = false; btn.textContent = "Create free account"; }
   }
