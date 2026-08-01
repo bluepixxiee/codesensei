@@ -43,15 +43,11 @@ def generate_otp():
     return str(random.randint(100000, 999999))
 
 def send_otp_email(email, otp_code, purpose, name="there"):
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
+    import requests
 
-    smtp_server = "smtp-relay.brevo.com"
-    smtp_port = 587
-    smtp_login = os.environ.get("BREVO_LOGIN")
-    smtp_password = os.environ.get("BREVO_SMTP_KEY")
+    api_key = os.environ.get("BREVO_API_KEY")
     sender_email = os.environ.get("SENDER_EMAIL")
+    sender_name = os.environ.get("SENDER_NAME", "CodeSensei")
 
     if purpose == "signup":
         subject = "Verify your CodeSensei account"
@@ -65,32 +61,40 @@ def send_otp_email(email, otp_code, purpose, name="there"):
       </div>
       <h2 style="font-size: 20px; margin-bottom: 12px;">Hey {name}!</h2>
       <p style="color: #9ca3af; line-height: 1.6; margin-bottom: 28px;">
-        {"Verify your account" if purpose == "signup" else "Here's your login OTP"} — enter this code:
+        {"Verify your account" if purpose == "signup" else "Here is your login OTP"} — enter this code:
       </p>
       <div style="background: #13102a; border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 28px;">
         <div style="font-size: 40px; font-weight: 700; letter-spacing: 12px; color: #a78bfa;">{otp_code}</div>
         <div style="font-size: 13px; color: #6b7280; margin-top: 8px;">Expires in 10 minutes</div>
       </div>
-      <p style="color: #6b7280; font-size: 13px;">If you didn't request this, ignore this email.</p>
+      <p style="color: #6b7280; font-size: 13px;">If you did not request this, ignore this email.</p>
     </div>
     """
 
-    try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = f"CodeSensei <{sender_email}>"
-        msg["To"] = email
-        msg.attach(MIMEText(html_content, "html"))
+    payload = {
+        "sender": {"name": sender_name, "email": sender_email},
+        "to": [{"email": email, "name": name}],
+        "subject": subject,
+        "htmlContent": html_content
+    }
 
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_login, smtp_password)
-            server.sendmail(sender_email, email, msg.as_string())
-        return True
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": api_key
+    }
+
+    try:
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+        print(f"Brevo response: {response.status_code} - {response.text}")
+        return response.status_code == 201
     except Exception as e:
         print(f"Email error: {type(e).__name__}: {e}")
-        import traceback
-        traceback.print_exc()
         return False
 
 def create_otp(email, purpose):
