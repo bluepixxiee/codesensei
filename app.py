@@ -245,6 +245,11 @@ def test_email():
         "Aditi"
     )
     return f"Email sent: {result}"
+@app.route("/debug-env")
+def debug_env():
+    import os
+    key = os.environ.get("BREVO_API_KEY", "NOT FOUND")
+    return f"Key length: {len(key)} | First 10 chars: {key[:10]}"
 
 if __name__ == "__main__":
     app.run(debug=True)
