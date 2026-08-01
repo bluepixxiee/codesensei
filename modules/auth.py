@@ -43,59 +43,8 @@ def generate_otp():
     return str(random.randint(100000, 999999))
 
 def send_otp_email(email, otp_code, purpose, name="there"):
-    import requests
-
-    api_key = os.environ.get("BREVO_API_KEY")
-    sender_email = os.environ.get("SENDER_EMAIL")
-    sender_name = os.environ.get("SENDER_NAME", "CodeSensei")
-
-    if purpose == "signup":
-        subject = "Verify your CodeSensei account"
-    else:
-        subject = "Your CodeSensei login OTP"
-
-    html_content = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #05010f; color: #f5f3ee; padding: 40px; border-radius: 16px;">
-      <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="font-size: 24px; color: #a78bfa; margin: 0;">⚡ CodeSensei</h1>
-      </div>
-      <h2 style="font-size: 20px; margin-bottom: 12px;">Hey {name}!</h2>
-      <p style="color: #9ca3af; line-height: 1.6; margin-bottom: 28px;">
-        {"Verify your account" if purpose == "signup" else "Here is your login OTP"} — enter this code:
-      </p>
-      <div style="background: #13102a; border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 28px;">
-        <div style="font-size: 40px; font-weight: 700; letter-spacing: 12px; color: #a78bfa;">{otp_code}</div>
-        <div style="font-size: 13px; color: #6b7280; margin-top: 8px;">Expires in 10 minutes</div>
-      </div>
-      <p style="color: #6b7280; font-size: 13px;">If you did not request this, ignore this email.</p>
-    </div>
-    """
-
-    payload = {
-        "sender": {"name": sender_name, "email": sender_email},
-        "to": [{"email": email, "name": name}],
-        "subject": subject,
-        "htmlContent": html_content
-    }
-
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "api-key": api_key
-    }
-
-    try:
-        response = requests.post(
-            "https://api.brevo.com/v3/smtp/email",
-            json=payload,
-            headers=headers,
-            timeout=10
-        )
-        print(f"Brevo response: {response.status_code} - {response.text}")
-        return response.status_code == 201
-    except Exception as e:
-        print(f"Email error: {type(e).__name__}: {e}")
-        return False
+    print(f"OTP for {email}: {otp_code}")
+    return True
 
 def create_otp(email, purpose):
     # delete any existing unused OTPs for this email and purpose

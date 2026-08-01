@@ -137,18 +137,13 @@ def login():
         data = request.get_json()
         email = data.get("email", "").strip().lower()
         password = data.get("password", "")
-
         success, result = login_user_check(email, password)
         if not success:
             return jsonify({"success": False, "error": result})
-
         if not result.is_verified:
-            return jsonify({"success": False, "error": "Account not verified. Please sign up again."})
-
-        # direct login — no OTP needed
+            return jsonify({"success": False, "error": "Account not verified."})
         session["user_id"] = result.id
         return jsonify({"success": True, "redirect": "/dashboard"})
-
     return render_template("login.html")
 
 @app.route("/logout")
