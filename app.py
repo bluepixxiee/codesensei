@@ -27,7 +27,10 @@ def is_logged_in():
 
 def current_user():
     if is_logged_in():
-        return User.query.get(session["user_id"])
+        try:
+            return db.session.get(User, session["user_id"])
+        except:
+            return None
     return None
 
 # ── public routes ─────────────────────────────────────────
@@ -156,10 +159,18 @@ def logout():
 def dashboard():
     if not is_logged_in():
         return redirect(url_for("login"))
-    user = current_user()
-    stats = get_user_stats(user.id)
-    mistakes = get_repeated_mistakes(user.id)
-    return render_template("dashboard.html", user=user, stats=stats, mistakes=mistakes)
+    try:
+        user = current_user()
+        if not user:
+            session.clear()
+            return redirect(url_for("login"))
+        stats = get_user_stats(user.id)
+        mistakes = get_repeated_mistakes(user.id)
+        return render_template("dashboard.html", user=user, stats=stats, mistakes=mistakes)
+    except Exception as e:
+        print(f"Dashboard error: {e}")
+        session.clear()
+        return redirect(url_for("login"))
 
 @app.route("/review")
 def review_page():
