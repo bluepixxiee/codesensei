@@ -112,6 +112,11 @@
       <p>{{ review.created_at.strftime('%d %b %Y, %I:%M %p') }} · {{ review.language }}</p>
     </div>
   </div>
+  <div style="margin-top:16px;">
+    <a href="/api/download-report/{{ review.id }}" class="btn btn-primary">
+        ↓ Download PDF Report
+    </a>
+</div>
 
   <!-- SCORE OVERVIEW -->
   <div class="glass-card">

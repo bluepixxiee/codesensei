@@ -146,6 +146,20 @@
     @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
     .container { animation: fadeUp 0.5s ease both; }
     .issue-card { animation: fadeUp 0.4s ease both; }
+
+    .file-upload-area {
+    border: 1px dashed var(--border-bright);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.01);
+}
+.file-upload-area:hover {
+    border-color: var(--accent);
+    background: rgba(99,102,241,0.04);
+}
   </style>
 </head>
 <body>
@@ -183,7 +197,16 @@
             {% endfor %}
           </div>
         </div>
-
+        <div style="margin-bottom:16px;">
+            <div style="font-size:12px; font-weight:600; color:var(--muted2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Upload File (optional)</div>
+            <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click()">
+              <input type="file" id="fileInput" accept=".py,.js,.java,.cpp,.ts,.go,.rs,.sql,.c,.cs" style="display:none;" onchange="handleFileUpload(this)">
+                <div style="font-size:24px; margin-bottom:8px;">📁</div>
+                <div style="font-size:13px; color:var(--muted2);">Click to upload a code file</div>
+                <div style="font-size:11px; color:var(--muted); margin-top:4px;">.py .js .java .cpp .ts .go .rs .sql</div>
+                <div id="uploadedFileName" style="font-size:12px; color:var(--green); margin-top:8px; display:none;"></div>
+          </div>
+        </div>
         <div class="editor-wrap">
           <div class="editor-bar">
             <div class="editor-dots">
@@ -265,8 +288,11 @@ def example():
 
           <!-- VIEW FULL REPORT -->
           <a id="reportLink" href="#" class="btn btn-primary btn-large" style="margin-top:8px; display:none;">
-            📊 View Full Report →
+              📊 View Full Report →
           </a>
+          <button id="downloadPdf" class="btn btn-ghost btn-large" style="margin-top:8px; display:none;">
+              ↓ Download PDF Report
+          </button>
 
         </div>
       </div>
@@ -407,11 +433,15 @@ def example():
         </div>`;
     }
 
-    // report link
+    
+    // report links
     if (currentReviewId) {
-      const link = document.getElementById('reportLink');
-      link.href = `/report/${currentReviewId}`;
-      link.style.display = 'flex';
+        const link = document.getElementById('reportLink');
+        link.href = `/report/${currentReviewId}`;
+        link.style.display = 'flex';
+        const dlBtn = document.getElementById('downloadPdf');
+        if (dlBtn) dlBtn.style.display = 'flex';
+        dlBtn.onclick = () => { window.location.href = `/api/download-report/${currentReviewId}`; };
     }
 
     document.getElementById('results').classList.add('show');
@@ -421,6 +451,38 @@ def example():
   function escapeHtml(text) {
     return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
+
+  let uploadedFile = null;
+
+function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // detect language from extension
+    const ext = file.name.split('.').pop().toLowerCase();
+    const langMap = {
+        'py': 'Python', 'js': 'JavaScript', 'java': 'Java',
+        'cpp': 'C++', 'ts': 'TypeScript', 'go': 'Go',
+        'rs': 'Rust', 'sql': 'SQL', 'c': 'C++', 'cs': 'C++'
+    };
+
+    if (langMap[ext]) {
+        const langBtn = [...document.querySelectorAll('.lang-btn')]
+            .find(b => b.textContent === langMap[ext]);
+        if (langBtn) selectLang(langBtn, langMap[ext]);
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('codeInput').value = e.target.result;
+        updateCount();
+        uploadedFile = file;
+        document.getElementById('uploadedFileName').textContent = '✓ ' + file.name;
+        document.getElementById('uploadedFileName').style.display = 'block';
+        document.getElementById('fileUploadArea').style.borderColor = 'var(--green)';
+    };
+    reader.readAsText(file);
+}
 </script>
 </body>
 </html>

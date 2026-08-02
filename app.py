@@ -8,6 +8,7 @@ from modules.auth import (db, User, Review, register_user, login_user_check,
 from modules.reviewer import review_code, count_issues_by_type
 from modules.tracker import get_user_stats, get_repeated_mistakes
 from datetime import datetime
+from modules.pdf_report import generate_pdf_report
 
 load_dotenv()
 
@@ -199,14 +200,20 @@ def api_review():
     if not is_logged_in():
         return jsonify({"error": "Not logged in"}), 401
     try:
-        data = request.get_json()
-        code = data.get("code", "").strip()
-        language = data.get("language", "python")
+        # handle both file upload and text paste
+        if request.files.get("file"):
+            file = request.files["file"]
+            code = file.read().decode("utf-8")
+            language = request.form.get("language", "python")
+        else:
+            data = request.get_json()
+            code = data.get("code", "").strip()
+            language = data.get("language", "python")
 
         if not code:
             return jsonify({"error": "No code provided"}), 400
-        if len(code) > 5000:
-            return jsonify({"error": "Code too long — max 5000 characters"}), 400
+        if len(code) > 10000:
+            return jsonify({"error": "Code too long — max 10000 characters"}), 400
 
         result = review_code(code, language)
         issues = result.get("issues", [])
@@ -234,6 +241,8 @@ def api_review():
             "result": result
         })
 
+    except UnicodeDecodeError:
+        return jsonify({"error": "File must be a text/code file"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -260,6 +269,48 @@ def debug_env():
     import os
     key = os.environ.get("BREVO_API_KEY", "NOT FOUND")
     return f"Key length: {len(key)} | First 10 chars: {key[:10]}"
+
+@app.route("/api/download-report/<int:review_id>")
+def download_report(review_id):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+    try:
+        user = current_user()
+        rev = Review.query.filter_by(id=review_id, user_id=user.id).first()
+        if not rev:
+            return jsonify({"error": "Report not found"}), 404
+
+        review_data = json.loads(rev.review_output)
+        counts = {
+            "bug": rev.bug_count,
+            "security": rev.security_count,
+            "performance": rev.performance_count,
+            "style": rev.style_count
+        }
+
+        import os
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp_path = tmp.name
+
+        generate_pdf_report(
+            review_data=review_data,
+            code_snippet=rev.code_snippet,
+            language=rev.language,
+            overall_score=rev.overall_score,
+            issue_counts=counts,
+            output_path=tmp_path
+        )
+
+        from flask import send_file
+        return send_file(
+            tmp_path,
+            as_attachment=True,
+            download_name=f"codesensei_report_{review_id}.pdf",
+            mimetype="application/pdf"
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
