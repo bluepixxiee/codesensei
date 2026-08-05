@@ -82,10 +82,10 @@ def get_repeated_mistakes(user_id):
 
     repeated = []
     messages = {
-        "bug": f"You've introduced bugs {pattern_counts['bug']} times — focus on testing edge cases and null checks.",
-        "security": f"Security issues appeared {pattern_counts['security']} times — study input validation and safe coding practices.",
-        "performance": f"Performance issues showed up {pattern_counts['performance']} times — learn about time complexity and efficient data structures.",
-        "style": f"Style issues appeared {pattern_counts['style']} times — follow a consistent style guide for your language."
+        "bug": f"You've introduced bugs {pattern_counts['bug']} times - focus on testing edge cases and null checks.",
+        "security": f"Security issues appeared {pattern_counts['security']} times - study input validation and safe coding practices.",
+        "performance": f"Performance issues showed up {pattern_counts['performance']} times - learn about time complexity and efficient data structures.",
+        "style": f"Style issues appeared {pattern_counts['style']} times - follow a consistent style guide for your language."
     }
 
     for key, count in pattern_counts.items():

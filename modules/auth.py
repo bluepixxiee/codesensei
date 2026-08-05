@@ -14,7 +14,24 @@ class User(db.Model):
     password = db.Column(db.String(200), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # gamification
+    xp = db.Column(db.Integer, default=0)
+    level = db.Column(db.Integer, default=1)
+    streak = db.Column(db.Integer, default=0)
+    last_review_date = db.Column(db.Date, default=None)
+    total_reviews = db.Column(db.Integer, default=0)
+    total_issues_found = db.Column(db.Integer, default=0)
+    missions_completed = db.Column(db.Integer, default=0)
+
+    # skill mastery (0-100)
+    security_mastery = db.Column(db.Float, default=0.0)
+    bug_mastery = db.Column(db.Float, default=0.0)
+    performance_mastery = db.Column(db.Float, default=0.0)
+    style_mastery = db.Column(db.Float, default=0.0)
+
     reviews = db.relationship('Review', backref='user', lazy=True)
+    missions = db.relationship('Mission', backref='user', lazy=True)
 
 class OTP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -39,6 +56,23 @@ class Review(db.Model):
     overall_score = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Mission(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    buggy_code = db.Column(db.Text, nullable=False)
+    language = db.Column(db.String(50), nullable=False)
+    difficulty = db.Column(db.String(20), default="normal")  # easy/normal/boss
+    xp_reward = db.Column(db.Integer, default=100)
+    weakness_type = db.Column(db.String(50), nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    user_solution = db.Column(db.Text, nullable=True)
+    hints = db.Column(db.Text, nullable=True)          # JSON list of hint strings
+    what_to_learn = db.Column(db.Text, nullable=True)  # single sentence
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    
 def generate_otp():
     return str(random.randint(100000, 999999))
 

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Missions - Ascend</title>
+  <meta name="description" content="View and complete AI-generated coding missions tailored to your weaknesses. Earn XP and level up on Ascend."/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #05010f;
+      --surface: #0d0a1a;
+      --surface2: #13102a;
+      --border: rgba(255,255,255,0.07);
+      --border-bright: rgba(255,255,255,0.13);
+      --accent: #6366f1;
+      --accent2: #a78bfa;
+      --accent3: #fcd34d;
+      --green: #10b981;
+      --red: #f43f5e;
+      --amber: #f59e0b;
+      --text: #f5f3ee;
+      --muted: #6b7280;
+      --muted2: #9ca3af;
+    }
+
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .orb { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+    .orb-1 { width: 600px; height: 600px; background: rgba(99,102,241,0.08); top: -200px; left: -100px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(167,139,250,0.05); bottom: 0; right: -100px; }
+    .orb-3 { width: 300px; height: 300px; background: rgba(244,63,94,0.04); top: 40%; left: 50%; }
+
+    /* NAV */
+    nav { padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(5,1,15,0.85); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; }
+    .logo { font-family: 'General Sans', sans-serif; font-size: 20px; font-weight: 700; text-decoration: none; color: var(--text); display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+    .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 100px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; box-shadow: 0 4px 16px rgba(99,102,241,0.3); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(99,102,241,0.4); }
+    .btn-ghost { background: rgba(255,255,255,0.05); color: var(--muted2); border: 1px solid var(--border-bright); }
+    .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; position: relative; z-index: 1; }
+
+    /* PAGE HEADER */
+    .page-header { margin-bottom: 36px; }
+    .page-header h1 { font-family: 'General Sans', sans-serif; font-size: 34px; font-weight: 700; letter-spacing: -1px; margin-bottom: 6px; }
+    .page-header p { font-size: 14px; color: var(--muted2); }
+
+    /* STATS BAR */
+    .stats-bar {
+      display: flex; gap: 12px; margin-bottom: 32px;
+    }
+    .stat-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.01);
+      border-radius: 12px; padding: 12px 20px;
+      border: 1px solid var(--border-bright);
+      flex: 1;
+    }
+    .stat-pill-icon { font-size: 18px; }
+    .stat-pill-val { font-family: 'General Sans', sans-serif; font-size: 20px; font-weight: 700; line-height: 1; }
+    .stat-pill-lbl { font-size: 11px; color: var(--muted2); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .c-accent { color: var(--accent2); }
+    .c-green { color: var(--green); }
+    .c-amber { color: var(--amber); }
+
+    /* SECTION TITLE */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title { font-family: 'General Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 8px; }
+    .section-count { font-size: 12px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 2px 10px; }
+
+    /* MISSION CARD */
+    .mission-card {
+      display: flex; align-items: center; gap: 16px;
+      background: rgba(255,255,255,0.01);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 12px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .mission-card::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.07) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .mission-card:hover { transform: translateX(4px) translateY(-2px); }
+    .mission-card:hover .mission-arrow { opacity: 1; transform: translateX(0); }
+
+    .mission-icon-wrap {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .diff-easy { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2); }
+    .diff-normal { background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2); }
+    .diff-boss { background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.2); }
+
+    .mission-body { flex: 1; min-width: 0; }
+    .mission-title { font-family: 'General Sans', sans-serif; font-size: 15px; font-weight: 600; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mission-desc { font-size: 12px; color: var(--muted2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .mission-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .tag-lang { background: rgba(99,102,241,0.12); color: var(--accent2); border: 1px solid rgba(99,102,241,0.2); }
+    .tag-easy { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+    .tag-normal { background: rgba(99,102,241,0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); }
+    .tag-boss { background: rgba(244,63,94,0.12); color: #fb7185; border: 1px solid rgba(244,63,94,0.2); }
+    .tag-weakness { background: rgba(245,158,11,0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+
+    .mission-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+    .mission-xp { font-family: 'General Sans', sans-serif; font-size: 16px; font-weight: 700; color: var(--accent3); white-space: nowrap; }
+    .mission-xp span { font-size: 11px; font-weight: 500; color: var(--muted); }
+    .mission-arrow { font-size: 18px; color: var(--muted); opacity: 0; transform: translateX(-6px); transition: all 0.2s; }
+
+    /* COMPLETED BADGE */
+    .done-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--green); background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 20px; padding: 3px 10px; }
+
+    /* COMPLETED CARD - slightly muted */
+    .mission-card.completed { opacity: 0.65; }
+    .mission-card.completed:hover { opacity: 0.85; }
+
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 64px 20px; }
+    .empty-icon { font-size: 52px; margin-bottom: 16px; }
+    .empty-title { font-family: 'General Sans', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .empty-sub { font-size: 13px; color: var(--muted2); margin-bottom: 24px; line-height: 1.6; }
+
+    /* DIVIDER */
+    .section-divider { margin: 32px 0; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .container { animation: fadeUp 0.5s ease both; }
+    .mission-card { animation: fadeUp 0.4s ease both; }
+    .mission-card:nth-child(1) { animation-delay: 0.05s; }
+    .mission-card:nth-child(2) { animation-delay: 0.10s; }
+    .mission-card:nth-child(3) { animation-delay: 0.15s; }
+    .mission-card:nth-child(4) { animation-delay: 0.20s; }
+    .mission-card:nth-child(5) { animation-delay: 0.25s; }
+  </style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon">⚡</div>
+    Ascend
+  </a>
+  <div class="nav-right">
+    <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+    <a href="/review" class="btn btn-primary">+ New Review</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="page-header">
+    <h1>⚔️ Missions</h1>
+    <p>AI-generated challenges built around your weakest skills. Complete them to earn XP and level up faster.</p>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <div class="stat-pill-icon">⚔️</div>
+      <div>
+        <div class="stat-pill-val c-accent">{{ active_missions | length }}</div>
+        <div class="stat-pill-lbl">Active</div>
+      </div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-icon">✅</div>
+      <div>
+        <div class="stat-pill-val c-green">{{ completed_missions | length }}</div>
+        <div class="stat-pill-lbl">Completed</div>
+      </div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-icon">⚡</div>
+      <div>
+        <div class="stat-pill-val c-amber">
+          {% set total_xp = namespace(val=0) %}
+          {% for m in completed_missions %}
+            {% set total_xp.val = total_xp.val + m.xp_reward %}
+          {% endfor %}
+          {{ total_xp.val }}
+        </div>
+        <div class="stat-pill-lbl">XP Earned</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVE MISSIONS -->
+  <div class="section-divider" style="margin-top:0;">
+    <div class="section-header">
+      <div class="section-title">🔥 Active Missions</div>
+      <span class="section-count">{{ active_missions | length }}</span>
+    </div>
+
+    {% if active_missions %}
+      {% for m in active_missions %}
+        <a href="/mission/{{ m.id }}" class="mission-card">
+          <div class="mission-icon-wrap diff-{{ m.difficulty }}">
+            {% if m.difficulty == 'boss' %}👹
+            {% elif m.difficulty == 'easy' %}🌱
+            {% else %}⚔️
+            {% endif %}
+          </div>
+          <div class="mission-body">
+            <div class="mission-title">{{ m.title }}</div>
+            <div class="mission-desc">{{ m.description }}</div>
+            <div class="mission-tags">
+              <span class="tag tag-lang">{{ m.language }}</span>
+              <span class="tag tag-{{ m.difficulty }}">{{ m.difficulty.capitalize() }}</span>
+              <span class="tag tag-weakness">{{ m.weakness_type.capitalize() }}</span>
+            </div>
+          </div>
+          <div class="mission-right">
+            <div class="mission-xp">+{{ m.xp_reward }} <span>XP</span></div>
+            <div class="mission-arrow">→</div>
+          </div>
+        </a>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🎮</div>
+        <div class="empty-title">No active missions</div>
+        <div class="empty-sub">Submit a code review to unlock missions<br>tailored to your skill gaps.</div>
+        <a href="/review" class="btn btn-primary">Start a Code Review</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- COMPLETED MISSIONS -->
+  {% if completed_missions %}
+  <div class="section-divider">
+    <div class="section-header">
+      <div class="section-title">🏆 Completed</div>
+      <span class="section-count">{{ completed_missions | length }}</span>
+    </div>
+
+    {% for m in completed_missions %}
+      <div class="mission-card completed">
+        <div class="mission-icon-wrap diff-{{ m.difficulty }}" style="opacity:0.7;">
+          {% if m.difficulty == 'boss' %}👹
+          {% elif m.difficulty == 'easy' %}🌱
+          {% else %}⚔️
+          {% endif %}
+        </div>
+        <div class="mission-body">
+          <div class="mission-title">{{ m.title }}</div>
+          <div class="mission-tags">
+            <span class="tag tag-lang">{{ m.language }}</span>
+            <span class="tag tag-{{ m.difficulty }}">{{ m.difficulty.capitalize() }}</span>
+            <span class="tag tag-weakness">{{ m.weakness_type.capitalize() }}</span>
+          </div>
+        </div>
+        <div class="mission-right">
+          <span class="done-badge">✓ Completed</span>
+          <div style="font-size:13px; font-weight:700; color:var(--accent3);">+{{ m.xp_reward }} XP</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+</body>
+</html>

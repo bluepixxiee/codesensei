@@ -7,7 +7,7 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 def review_code(code, language):
     prompt = (
-        f"You are CodeSensei, an expert security-focused code mentor for junior developers.\n\n"
+        f"You are ascend, an expert security-focused code mentor for junior developers.\n\n"
         f"Review the following {language} code and respond ONLY with a valid JSON object. "
         f"No text before or after the JSON. No markdown. Just raw JSON starting with {{ and ending with }}.\n\n"
         f"Code to review:\n{code}\n\n"
@@ -57,7 +57,7 @@ def review_code(code, language):
         f"- 30-49: Significant problems found\n"
         f"- 0-29: Critical security vulnerabilities present\n\n"
         f"Code with SQL injection, command injection, or hardcoded secrets should NEVER score above 40.\n"
-        f"Be thorough — it is better to report too many issues than to miss critical ones.\n\n"
+        f"Be thorough - it is better to report too many issues than to miss critical ones.\n\n"
         f"Respond with exactly this JSON structure:\n"
         f"{{\n"
         f'  "overall_score": <integer 0-100>,\n'

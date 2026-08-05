@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ mission.title }} - Ascend</title>
+  <meta name="description" content="Complete the {{ mission.difficulty }} mission: {{ mission.title }}. Fix the code and earn {{ mission.xp_reward }} XP."/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #05010f;
+      --surface: #0d0a1a;
+      --surface2: #13102a;
+      --border: rgba(255,255,255,0.07);
+      --border-bright: rgba(255,255,255,0.13);
+      --accent: #6366f1;
+      --accent2: #a78bfa;
+      --accent3: #fcd34d;
+      --green: #10b981;
+      --red: #f43f5e;
+      --amber: #f59e0b;
+      --text: #f5f3ee;
+      --muted: #6b7280;
+      --muted2: #9ca3af;
+    }
+
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .orb { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+    .orb-1 { width: 500px; height: 500px; background: rgba(99,102,241,0.08); top: -150px; left: -100px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(167,139,250,0.06); bottom: 0; right: -100px; }
+
+    /* NAV */
+    nav { padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(5,1,15,0.85); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; }
+    .logo { font-family: 'General Sans', sans-serif; font-size: 20px; font-weight: 700; text-decoration: none; color: var(--text); display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+    .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-xp { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border-bright); border-radius: 100px; padding: 6px 14px; font-size: 13px; }
+    .nav-xp .xp-val { color: var(--accent3); font-weight: 700; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 100px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; box-shadow: 0 4px 16px rgba(99,102,241,0.3); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(99,102,241,0.4); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-ghost { background: rgba(255,255,255,0.05); color: var(--muted2); border: 1px solid var(--border-bright); }
+    .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+    .btn-large { padding: 13px 32px; font-size: 15px; width: 100%; justify-content: center; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; position: relative; z-index: 1; }
+
+    /* MISSION HEADER CARD */
+    .mission-header {
+      background: rgba(255,255,255,0.01);
+      border-radius: 22px; padding: 28px 32px;
+      margin-bottom: 24px;
+      position: relative; overflow: hidden;
+    }
+    .mission-header::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(99,102,241,0.5), rgba(167,139,250,0.2), rgba(255,255,255,0.05));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .mission-header::after {
+      content: '';
+      position: absolute; top: -60%; right: -5%;
+      width: 350px; height: 350px;
+      background: radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .mission-icon-big {
+      width: 60px; height: 60px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; flex-shrink: 0;
+    }
+    .diff-easy { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2); }
+    .diff-normal { background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2); }
+    .diff-boss { background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.2); }
+    .mission-meta-info h1 { font-family: 'General Sans', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .meta-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .tag-lang { background: rgba(99,102,241,0.12); color: var(--accent2); border: 1px solid rgba(99,102,241,0.2); }
+    .tag-easy { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+    .tag-normal { background: rgba(99,102,241,0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); }
+    .tag-boss { background: rgba(244,63,94,0.12); color: #fb7185; border: 1px solid rgba(244,63,94,0.2); }
+    .tag-weakness { background: rgba(245,158,11,0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+    .header-right { text-align: right; flex-shrink: 0; }
+    .xp-badge { font-family: 'General Sans', sans-serif; font-size: 28px; font-weight: 700; color: var(--accent3); line-height: 1; }
+    .xp-badge span { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .mission-desc { font-size: 14px; color: var(--muted2); line-height: 1.7; }
+
+    /* ALREADY COMPLETED BANNER */
+    .completed-banner {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 14px; padding: 16px 20px; margin-bottom: 24px;
+    }
+    .completed-banner .icon { font-size: 24px; }
+    .completed-banner .text { font-size: 13px; color: var(--muted2); line-height: 1.5; }
+    .completed-banner .text strong { color: var(--green); }
+
+    /* LAYOUT */
+    .mission-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+    /* GLASS CARD */
+    .glass-card { background: rgba(255,255,255,0.01); border-radius: 20px; padding: 24px; position: relative; overflow: hidden; }
+    .glass-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.07) 100%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+    .card-title { font-family: 'General Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+    /* CODE EDITOR */
+    .editor-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface2); border-radius: 12px 12px 0 0; padding: 10px 16px; border: 1px solid var(--border-bright); border-bottom: none; }
+    .editor-dots { display: flex; gap: 6px; }
+    .editor-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
+    .editor-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+    .code-display {
+      width: 100%; min-height: 300px;
+      background: var(--surface2);
+      border: 1px solid var(--border-bright); border-radius: 0 0 12px 12px;
+      padding: 16px;
+      color: #a8b3c8;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12.5px; line-height: 1.75;
+      white-space: pre; overflow-x: auto;
+    }
+    textarea.code-editor {
+      width: 100%; min-height: 300px;
+      background: var(--surface2);
+      border: 1px solid var(--border-bright); border-radius: 0 0 12px 12px;
+      padding: 16px;
+      color: #a8b3c8;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12.5px; line-height: 1.75;
+      resize: vertical; outline: none;
+      transition: border-color 0.2s;
+      tab-size: 2;
+    }
+    textarea.code-editor:focus { border-color: var(--accent); }
+    textarea.code-editor::placeholder { color: var(--muted); }
+
+    /* HINTS */
+    .hints-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .hint-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(99,102,241,0.06);
+      border: 1px solid rgba(99,102,241,0.12);
+      border-radius: 10px; padding: 10px 14px;
+      font-size: 13px; color: var(--muted2); line-height: 1.5;
+      cursor: default;
+    }
+    .hint-num { font-size: 11px; font-weight: 700; color: var(--accent2); flex-shrink: 0; margin-top: 1px; }
+    .hint-text { display: none; }
+    .hint-item.revealed .hint-text { display: block; }
+    .hint-item.revealed .hint-placeholder { display: none; }
+    .hint-placeholder { color: var(--muted); font-size: 12px; font-style: italic; }
+    .hint-item:not(.revealed) { cursor: pointer; }
+    .hint-item:not(.revealed):hover { border-color: rgba(99,102,241,0.3); background: rgba(99,102,241,0.1); }
+
+    /* WHAT TO LEARN */
+    .learn-box { background: rgba(252,211,77,0.06); border: 1px solid rgba(252,211,77,0.15); border-radius: 12px; padding: 14px 16px; font-size: 13px; color: var(--muted2); line-height: 1.6; }
+    .learn-label { font-size: 11px; font-weight: 700; color: var(--accent3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+
+    /* LOADER */
+    .loader { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 40px; }
+    .loader.show { display: flex; }
+    .loader-ring { width: 40px; height: 40px; border: 3px solid rgba(99,102,241,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text { font-size: 13px; color: var(--muted2); text-align: center; }
+
+    /* RESULT PANEL */
+    .result-panel { display: none; }
+    .result-panel.show { display: block; }
+    .result-pass {
+      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 14px; padding: 20px;
+    }
+    .result-fail {
+      background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.15);
+      border-radius: 14px; padding: 20px;
+    }
+    .result-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .result-icon { font-size: 28px; }
+    .result-title { font-family: 'General Sans', sans-serif; font-size: 17px; font-weight: 700; }
+    .result-score { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.06); border-radius: 20px; padding: 3px 12px; margin-left: auto; }
+    .result-feedback { font-size: 13px; color: var(--muted2); line-height: 1.7; margin-bottom: 12px; }
+    .result-list { display: flex; flex-direction: column; gap: 6px; }
+    .result-list-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted2); }
+    .result-list-item .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .dot-green { background: var(--green); }
+    .dot-red { background: var(--red); }
+    .result-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .c-green { color: var(--green); }
+    .c-red { color: var(--red); }
+
+    /* XP EARNED POP */
+    .xp-earned-pop { text-align: center; padding: 8px 0 16px; }
+    .xp-earned-pop .num { font-family: 'General Sans', sans-serif; font-size: 36px; font-weight: 700; color: var(--accent3); animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+    .xp-earned-pop .label { font-size: 13px; color: var(--muted2); }
+    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .container { animation: fadeUp 0.5s ease both; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 32px; right: 32px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; padding: 16px 24px; border-radius: 16px; font-weight: 600; box-shadow: 0 8px 32px rgba(99,102,241,0.4); z-index: 1000; display: none; animation: slideIn 0.4s ease; }
+    @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .hint-penalty {
+      font-size: 11px; font-weight: 700; color: var(--red);
+      background: rgba(244,63,94,0.12); padding: 2px 6px;
+      border-radius: 4px; margin-left: 6px; border: 1px solid rgba(244,63,94,0.2);
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon">⚡</div>
+    Ascend
+  </a>
+  <div class="nav-right">
+    <div class="nav-xp">
+      <span>⚡</span>
+      <span class="xp-val" id="navXp">{{ user.xp }} XP</span>
+    </div>
+    <a href="/missions" class="btn btn-ghost">← Missions</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- MISSION HEADER -->
+  <div class="mission-header">
+    <div class="header-top">
+      <div class="header-left">
+        <div class="mission-icon-big diff-{{ mission.difficulty }}">
+          {% if mission.difficulty == 'boss' %}👹
+          {% elif mission.difficulty == 'easy' %}🌱
+          {% else %}⚔️
+          {% endif %}
+        </div>
+        <div class="mission-meta-info">
+          <h1>{{ mission.title }}</h1>
+          <div class="meta-tags">
+            <span class="tag tag-lang">{{ mission.language }}</span>
+            <span class="tag tag-{{ mission.difficulty }}">{{ mission.difficulty.capitalize() }}</span>
+            <span class="tag tag-weakness">{{ mission.weakness_type.capitalize() }} Focus</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="xp-badge" id="xpBadgeDisplay">+{{ mission.xp_reward }} <span>XP</span></div>
+        <div style="font-size:11px; color:var(--muted); margin-top:4px;">Reward</div>
+      </div>
+    </div>
+    <div class="mission-desc">{{ mission.description }}</div>
+  </div>
+
+  <!-- ALREADY COMPLETED -->
+  {% if mission.is_completed %}
+  <div class="completed-banner">
+    <div class="icon">🏆</div>
+    <div class="text">
+      <strong>Mission complete!</strong> You already solved this challenge and earned {{ mission.xp_reward }} XP.
+      Your solution is shown below for reference.
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- LAYOUT: BUGGY CODE + SOLUTION -->
+  <div class="mission-layout">
+
+    <!-- LEFT: BUGGY CODE + HINTS -->
+    <div>
+      <div class="glass-card" style="margin-bottom:16px;">
+        <div class="card-title">🐛 Buggy Code</div>
+        <div class="editor-bar">
+          <div class="editor-dots">
+            <div class="editor-dot dot-r"></div>
+            <div class="editor-dot dot-y"></div>
+            <div class="editor-dot dot-g"></div>
+          </div>
+          <span class="editor-label">{{ mission.language }} · Read only</span>
+          <button class="btn btn-ghost" id="copyBtn" onclick="copyBuggyCode()" style="padding:4px 12px; font-size:11px;">Copy</button>
+        </div>
+        <div id="buggyCodeAce" style="height: 320px; width: 100%; position: relative; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--border-bright);"></div>
+      </div>
+
+      <!-- HINTS -->
+      <div class="glass-card">
+        <div class="card-title">💡 Hints <span style="font-size:11px; font-weight:400; color:var(--muted); text-transform:none; letter-spacing:0;">(click to reveal)</span></div>
+        <div class="hints-list" id="hintsList">
+          <!-- populated by JS from mission data -->
+        </div>
+        <div class="learn-box" style="margin-top:0;">
+          <div class="learn-label">📚 What you'll learn</div>
+          <span id="whatToLearnText" style="color:var(--muted2); font-size:13px; line-height:1.6;">
+            <!-- populated by JS -->
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SOLUTION EDITOR -->
+    <div>
+      <div class="glass-card">
+        <div class="card-title">✏️ Your Solution</div>
+
+        {% if not mission.is_completed %}
+        <!-- EDITOR -->
+        <div class="editor-bar">
+          <div class="editor-dots">
+            <div class="editor-dot dot-r"></div>
+            <div class="editor-dot dot-y"></div>
+            <div class="editor-dot dot-g"></div>
+          </div>
+          <span class="editor-label" id="editorLang">{{ mission.language }}</span>
+          <span style="font-size:11px; color:var(--muted);" id="charCount">0 chars</span>
+        </div>
+        <div id="solutionAce" style="height: 320px; width: 100%; position: relative; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--border-bright);"></div>
+        <textarea id="solutionEditor" style="display:none;"></textarea>
+
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary btn-large" id="submitBtn" onclick="submitSolution()">
+            ⚡ Submit Solution
+          </button>
+        </div>
+
+        <!-- LOADER -->
+        <div class="loader" id="loader">
+          <div class="loader-ring"></div>
+          <div class="loader-text">Evaluating your solution…</div>
+        </div>
+
+        <!-- RESULT -->
+        <div class="result-panel" id="resultPanel" style="margin-top:16px;">
+          <div id="resultContent"></div>
+          <div id="nextActions" style="margin-top:16px; display:none;">
+            <a href="/missions" class="btn btn-ghost" style="width:100%; justify-content:center; margin-bottom:8px;">← Back to Missions</a>
+            <a href="/dashboard" class="btn btn-primary" style="width:100%; justify-content:center;">Go to Dashboard →</a>
+          </div>
+        </div>
+
+        {% else %}
+        <!-- COMPLETED: show their solution -->
+        <div class="editor-bar">
+          <div class="editor-dots">
+            <div class="editor-dot dot-r"></div>
+            <div class="editor-dot dot-y"></div>
+            <div class="editor-dot dot-g"></div>
+          </div>
+          <span class="editor-label">Your submitted solution</span>
+        </div>
+        <div id="completedSolutionAce" style="height: 320px; width: 100%; position: relative; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--border-bright);"></div>
+        <div style="margin-top:16px; display:flex; gap:8px;">
+          <a href="/missions" class="btn btn-ghost" style="flex:1; justify-content:center;">← All Missions</a>
+          <a href="/review" class="btn btn-primary" style="flex:1; justify-content:center;">+ New Review</a>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LEVEL UP TOAST -->
+<div class="toast" id="levelUpToast"></div>
+
+<script>
+  const MISSION_ID = {{ mission.id }};
+  const IS_COMPLETED = {{ 'true' if mission.is_completed else 'false' }};
+  const hintsData = {{ hints | tojson }};
+  const whatToLearnData = {{ what_to_learn | tojson }};
+
+  const langModes = {
+    'Python': 'ace/mode/python',
+    'JavaScript': 'ace/mode/javascript',
+    'Java': 'ace/mode/java',
+    'C++': 'ace/mode/c_cpp',
+    'TypeScript': 'ace/mode/typescript',
+    'Go': 'ace/mode/golang',
+    'Rust': 'ace/mode/rust',
+    'SQL': 'ace/mode/sql'
+  };
+
+  const mode = langModes['{{ mission.language }}'] || 'ace/mode/python';
+
+  // Read-only Buggy Code Ace Editor
+  const buggyEditor = ace.edit("buggyCodeAce");
+  buggyEditor.setTheme("ace/theme/one_dark");
+  buggyEditor.session.setMode(mode);
+  buggyEditor.setValue({{ mission.buggy_code | tojson }}, -1);
+  buggyEditor.setReadOnly(true);
+  buggyEditor.setShowPrintMargin(false);
+
+  // Solution Ace Editor
+  let solutionAce = null;
+  if (!IS_COMPLETED) {
+    solutionAce = ace.edit("solutionAce");
+    solutionAce.setTheme("ace/theme/one_dark");
+    solutionAce.session.setMode(mode);
+    solutionAce.setValue({{ mission.buggy_code | tojson }}, -1);
+    solutionAce.setShowPrintMargin(false);
+    solutionAce.setOptions({
+      fontSize: "13px",
+      fontFamily: "Courier New, Courier, monospace",
+      tabSize: 4,
+      useSoftTabs: true
+    });
+    solutionAce.session.on('change', () => {
+      const code = solutionAce.getValue();
+      document.getElementById('solutionEditor').value = code;
+      updateCount(code);
+    });
+  } else {
+    const completedEditor = ace.edit("completedSolutionAce");
+    completedEditor.setTheme("ace/theme/one_dark");
+    completedEditor.session.setMode(mode);
+    completedEditor.setValue({{ (mission.user_solution or '# No solution stored.') | tojson }}, -1);
+    completedEditor.setReadOnly(true);
+    completedEditor.setShowPrintMargin(false);
+  }
+
+  const BASE_XP_REWARD = {{ mission.xp_reward }};
+  const PENALTY_PER_HINT = Math.max(15, Math.floor(BASE_XP_REWARD * 0.15));
+  let revealedHints = new Set();
+
+  function renderHints() {
+    const container = document.getElementById('hintsList');
+    if (hintsData.length === 0) {
+      container.innerHTML = '<div style="font-size:13px; color:var(--muted); padding:8px 0;">No hints available for this mission - trust yourself! 💪</div>';
+    } else {
+      container.innerHTML = hintsData.map((hint, i) => `
+        <div class="hint-item" id="hint-${i}" onclick="revealHint(${i})">
+          <span class="hint-num">#${i+1}</span>
+          <div style="flex:1;">
+            <div class="hint-placeholder">
+              Click to reveal hint ${i+1}
+              ${!IS_COMPLETED ? `<span class="hint-penalty">-${PENALTY_PER_HINT} XP</span>` : ''}
+            </div>
+            <div class="hint-text">${hint}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+    document.getElementById('whatToLearnText').textContent = whatToLearnData;
+  }
+
+  function revealHint(i) {
+    const el = document.getElementById(`hint-${i}`);
+    if (el && !el.classList.contains('revealed')) {
+      el.classList.add('revealed');
+      if (!IS_COMPLETED) {
+        revealedHints.add(i);
+        updateXpDisplay();
+        showPenaltyToast(`⚠️ Hint #${i+1} revealed (-${PENALTY_PER_HINT} XP penalty)`);
+      }
+    }
+  }
+
+  function updateXpDisplay() {
+    const totalPenalty = revealedHints.size * PENALTY_PER_HINT;
+    const currentReward = Math.max(10, BASE_XP_REWARD - totalPenalty);
+    const badge = document.getElementById('xpBadgeDisplay');
+    if (badge) {
+      badge.innerHTML = `+${currentReward} <span>XP</span>`;
+      if (totalPenalty > 0) {
+        badge.style.color = '#fbbf24';
+      }
+    }
+  }
+
+  function showPenaltyToast(msg) {
+    const toast = document.getElementById('levelUpToast');
+    if (toast) {
+      toast.textContent = msg;
+      toast.style.background = 'linear-gradient(135deg, #f43f5e, #e11d48)';
+      toast.style.display = 'block';
+      setTimeout(() => { 
+        toast.style.display = 'none';
+        toast.style.background = 'linear-gradient(135deg, var(--accent), var(--accent2))';
+      }, 3000);
+    }
+  }
+
+  function updateCount(val) {
+    const code = val !== undefined ? val : (solutionAce ? solutionAce.getValue() : '');
+    const len = code.length;
+    const el = document.getElementById('charCount');
+    if (el) el.textContent = `${len} chars`;
+  }
+
+  function copyBuggyCode() {
+    const text = buggyEditor.getValue();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✓ Copied';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+  }
+
+  async function submitSolution() {
+    const solution = solutionAce ? solutionAce.getValue().trim() : '';
+    if (!solution) { alert('Please write your solution first.'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Evaluating…';
+    document.getElementById('resultPanel').classList.remove('show');
+    document.getElementById('loader').classList.add('show');
+
+    try {
+      const res = await fetch(`/api/submit-mission/${MISSION_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ solution, hints_used: revealedHints.size })
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        alert('Error: ' + data.error);
+        return;
+      }
+
+      renderResult(data);
+
+    } catch(e) {
+      alert('Something went wrong: ' + e.message);
+    } finally {
+      document.getElementById('loader').classList.remove('show');
+      btn.disabled = false;
+      btn.textContent = '⚡ Submit Solution';
+    }
+  }
+
+  function renderResult(data) {
+    const passed = data.passed;
+    const ev = data.evaluation || {};
+    const score = ev.score || (passed ? 80 : 40);
+    const feedback = ev.feedback || (passed ? 'Great work!' : 'Keep trying!');
+    const fixed = ev.issues_fixed || [];
+    const remaining = ev.issues_remaining || [];
+
+    let html = '';
+
+    if (passed) {
+      // Update nav XP
+      if (data.total_xp !== undefined) {
+        document.getElementById('navXp').textContent = data.total_xp + ' XP';
+      }
+      const hintNote = data.hints_used > 0 ? `<div style="font-size:12px; color:var(--amber); margin-top:4px;">(${data.hints_used} hint${data.hints_used > 1 ? 's' : ''} used: -${data.total_penalty} XP penalty)</div>` : '';
+      html += `
+        <div class="xp-earned-pop">
+          <div class="num">+${data.xp_earned || 0} XP</div>
+          <div class="label">Mission Complete! ${hintNote}</div>
+        </div>
+        <div class="result-pass">
+          <div class="result-header">
+            <div class="result-icon">🏆</div>
+            <div class="result-title" style="color:var(--green);">Mission Passed!</div>
+            <div class="result-score">${score}/100</div>
+          </div>
+          <div class="result-feedback">${feedback}</div>`;
+      if (fixed.length > 0) {
+        html += `<div class="result-section-label c-green">Issues Fixed</div>
+          <div class="result-list">
+            ${fixed.map(f => `<div class="result-list-item"><div class="dot dot-green"></div>${f}</div>`).join('')}
+          </div>`;
+      }
+      html += `</div>`;
+
+      // level up check
+      if (data.leveled_up && data.level_info) {
+        const toast = document.getElementById('levelUpToast');
+        toast.textContent = `🎉 Level Up! You are now ${data.level_info.title}!`;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 5000);
+      }
+
+      document.getElementById('nextActions').style.display = 'block';
+      document.getElementById('submitBtn').style.display = 'none';
+
+    } else {
+      html += `
+        <div class="result-fail">
+          <div class="result-header">
+            <div class="result-icon">🔄</div>
+            <div class="result-title" style="color:var(--red);">Not quite yet…</div>
+            <div class="result-score">${score}/100</div>
+          </div>
+          <div class="result-feedback">${feedback}</div>`;
+      if (remaining.length > 0) {
+        html += `<div class="result-section-label c-red">Still needs fixing</div>
+          <div class="result-list">
+            ${remaining.map(r => `<div class="result-list-item"><div class="dot dot-red"></div>${r}</div>`).join('')}
+          </div>`;
+      }
+      html += `</div>`;
+    }
+
+    const panel = document.getElementById('resultPanel');
+    document.getElementById('resultContent').innerHTML = html;
+    panel.classList.add('show');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── Init ───────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    renderHints();
+    if (!IS_COMPLETED) {
+      const editor = document.getElementById('solutionEditor');
+      if (editor) updateCount();
+    }
+  });
+</script>
+</body>
+</html>

@@ -2,14 +2,14 @@ from fpdf import FPDF
 from datetime import datetime
 import json
 
-class CodeSenseiReport(FPDF):
+class ascendReport(FPDF):
     def header(self):
         self.set_fill_color(30, 20, 60)
         self.rect(0, 0, 210, 22, 'F')
         self.set_font("Helvetica", "B", 15)
         self.set_text_color(200, 180, 255)
         self.set_y(6)
-        self.cell(0, 10, "CodeSensei - AI Code Review Report", align="C")
+        self.cell(0, 10, "ascend - AI Code Review Report", align="C")
         self.set_draw_color(100, 100, 200)
         self.set_line_width(0.5)
         self.line(10, 22, 200, 22)
@@ -19,7 +19,7 @@ class CodeSenseiReport(FPDF):
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(120, 120, 120)
-        self.cell(0, 10, f"CodeSensei Report  |  {datetime.now().strftime('%d %B %Y, %I:%M %p')}  |  Page {self.page_no()}", align="C")
+        self.cell(0, 10, f"ascend Report  |  {datetime.now().strftime('%d %B %Y, %I:%M %p')}  |  Page {self.page_no()}", align="C")
 
     def section_title(self, title):
         self.ln(4)
@@ -37,7 +37,7 @@ class CodeSenseiReport(FPDF):
 
 
 def generate_pdf_report(review_data, code_snippet, language, overall_score, issue_counts, output_path):
-    pdf = CodeSenseiReport()
+    pdf = ascendReport()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.set_left_margin(12)

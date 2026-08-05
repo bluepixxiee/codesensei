@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Review — CodeSensei</title>
+  <title>Review - ascend</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
   <style>
@@ -160,7 +160,38 @@
     border-color: var(--accent);
     background: rgba(99,102,241,0.04);
 }
+
+    /* MISSION SUGGESTION CARD */
+    .mission-suggest {
+      display: none;
+      margin-top: 12px;
+      background: rgba(99,102,241,0.06);
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 16px;
+      padding: 18px 20px;
+      animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .mission-suggest.show { display: block; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .suggest-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .suggest-icon { font-size: 28px; flex-shrink: 0; }
+    .suggest-text h4 { font-family: 'General Sans', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+    .suggest-text p { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+    .suggest-tags { display: flex; gap: 6px; margin-bottom: 14px; }
+    .stag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stag-weakness { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+    .stag-easy { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+    .stag-normal { background: rgba(99,102,241,0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); }
+    .stag-boss { background: rgba(244,63,94,0.12); color: #fb7185; border: 1px solid rgba(244,63,94,0.2); }
+    .suggest-actions { display: flex; gap: 8px; }
+    .btn-suggest { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; border: none; transition: all 0.2s; justify-content: center; }
+    .btn-suggest-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; box-shadow: 0 4px 14px rgba(99,102,241,0.3); }
+    .btn-suggest-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
+    .btn-suggest-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-suggest-ghost { background: rgba(255,255,255,0.04); color: var(--muted2); border: 1px solid var(--border-bright); }
+    .btn-suggest-ghost:hover { color: var(--text); }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
 </head>
 <body>
 <div class="orb orb-1"></div>
@@ -169,7 +200,7 @@
 <nav>
   <a href="/" class="logo">
     <div class="logo-icon">⚡</div>
-    Code<span>Sensei</span>
+    Ascend
   </a>
   <div style="display:flex; gap:8px;">
     <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
@@ -217,9 +248,8 @@
             <span class="editor-lang" id="editorLang">Python</span>
             <span class="char-count" id="charCount">0 / 5000</span>
           </div>
-          <textarea id="codeInput" placeholder="# Paste your code here...
-def example():
-    pass" oninput="updateCount()"></textarea>
+          <div id="aceEditor" style="min-height: 320px; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--border-bright);"></div>
+          <textarea id="codeInput" style="display:none;"></textarea>
         </div>
 
         <div style="margin-top:16px;">
@@ -294,6 +324,26 @@ def example():
               ↓ Download PDF Report
           </button>
 
+          <!-- MISSION SUGGESTION CARD -->
+          <div class="mission-suggest" id="missionSuggest">
+            <div class="suggest-top">
+              <div class="suggest-icon" id="suggestIcon">⚔️</div>
+              <div class="suggest-text">
+                <h4>Mission Unlocked!</h4>
+                <p id="suggestMsg"></p>
+              </div>
+            </div>
+            <div class="suggest-tags" id="suggestTags"></div>
+            <div class="suggest-actions">
+              <button class="btn-suggest btn-suggest-primary" id="generateMissionBtn" onclick="generateMission()">
+                ⚡ Accept Mission
+              </button>
+              <button class="btn-suggest btn-suggest-ghost" onclick="dismissMission()">
+                Maybe later
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -304,36 +354,59 @@ def example():
   let selectedLang = 'Python';
   let currentReviewId = null;
 
+  // Ace Editor Setup
+  const editor = ace.edit("aceEditor");
+  editor.setTheme("ace/theme/one_dark");
+  editor.session.setMode("ace/mode/python");
+  editor.setShowPrintMargin(false);
+  editor.setOptions({
+    fontSize: "13px",
+    fontFamily: "Courier New, Courier, monospace",
+    enableBasicAutocompletion: true,
+    enableLiveAutocompletion: true,
+    tabSize: 4,
+    useSoftTabs: true
+  });
+
+  const langModes = {
+    'Python': 'ace/mode/python',
+    'JavaScript': 'ace/mode/javascript',
+    'Java': 'ace/mode/java',
+    'C++': 'ace/mode/c_cpp',
+    'TypeScript': 'ace/mode/typescript',
+    'Go': 'ace/mode/golang',
+    'Rust': 'ace/mode/rust',
+    'SQL': 'ace/mode/sql'
+  };
+
+  editor.session.on('change', function() {
+    const val = editor.getValue();
+    document.getElementById('codeInput').value = val;
+    updateCount(val);
+  });
+
   function selectLang(btn, lang) {
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     selectedLang = lang;
     document.getElementById('editorLang').textContent = lang;
-    const ta = document.getElementById('codeInput');
-    const placeholders = {
-      'Python': '# Paste your Python code here...\ndef example():\n    pass',
-      'JavaScript': '// Paste your JavaScript code here...\nfunction example() {\n  \n}',
-      'Java': '// Paste your Java code here...\npublic class Example {\n  \n}',
-      'C++': '// Paste your C++ code here...\n#include <iostream>\nint main() {\n  \n}',
-      'TypeScript': '// Paste your TypeScript code here...\nfunction example(): void {\n  \n}',
-      'Go': '// Paste your Go code here...\npackage main\nfunc main() {\n  \n}',
-      'Rust': '// Paste your Rust code here...\nfn main() {\n  \n}',
-      'SQL': '-- Paste your SQL code here...\nSELECT * FROM table_name;'
-    };
-    ta.placeholder = placeholders[lang] || '// Paste your code here...';
+    if (langModes[lang]) {
+      editor.session.setMode(langModes[lang]);
+    }
   }
 
-  function updateCount() {
-    const len = document.getElementById('codeInput').value.length;
+  function updateCount(val) {
+    const code = val !== undefined ? val : editor.getValue();
+    const len = code.length;
     const el = document.getElementById('charCount');
     el.textContent = `${len} / 5000`;
     el.style.color = len > 4500 ? '#f43f5e' : 'var(--muted)';
   }
 
   async function submitReview() {
-    const code = document.getElementById('codeInput').value.trim();
+    const code = editor.getValue().trim();
     if (!code) { alert('Please paste some code first.'); return; }
-    if (code.length > 5000) { alert('Code is too long — max 5000 characters.'); return; }
+    if (code.length > 5000) { alert('Code is too long - max 5000 characters.'); return; }
 
     document.getElementById('defaultState').style.display = 'none';
     document.getElementById('results').classList.remove('show');
@@ -354,12 +427,70 @@ def example():
       currentReviewId = data.review_id;
       renderResults(data.result);
 
+      // show mission suggestion if API recommends one
+      if (data.mission_suggestion) {
+        showMissionSuggestion(data.mission_suggestion);
+      }
+
     } catch(e) {
       alert('Something went wrong: ' + e.message);
     } finally {
       document.getElementById('loader').classList.remove('show');
       document.getElementById('reviewBtn').disabled = false;
       document.getElementById('reviewBtn').textContent = '⚡ Review My Code';
+    }
+  }
+
+  let pendingSuggestion = null;
+
+  function showMissionSuggestion(suggestion) {
+    pendingSuggestion = suggestion;
+    const card = document.getElementById('missionSuggest');
+    const icons = { security: '🔒', bug: '🐛', performance: '⚡', style: '✨' };
+    const diffLabels = { easy: 'Easy', normal: 'Normal', boss: 'Boss Battle' };
+
+    document.getElementById('suggestIcon').textContent = icons[suggestion.weakness] || '⚔️';
+    document.getElementById('suggestMsg').textContent = suggestion.message;
+
+    const diffClass = `stag-${suggestion.difficulty}`;
+    document.getElementById('suggestTags').innerHTML = `
+      <span class="stag stag-weakness">${suggestion.weakness}</span>
+      <span class="stag ${diffClass}">${diffLabels[suggestion.difficulty] || suggestion.difficulty}</span>
+      <span class="stag" style="background:rgba(99,102,241,0.1);color:var(--accent2);border:1px solid rgba(99,102,241,0.2);">${selectedLang}</span>
+    `;
+
+    // small delay so it appears after the results settle
+    setTimeout(() => card.classList.add('show'), 600);
+  }
+
+  function dismissMission() {
+    document.getElementById('missionSuggest').classList.remove('show');
+    pendingSuggestion = null;
+  }
+
+  async function generateMission() {
+    if (!pendingSuggestion) return;
+    const btn = document.getElementById('generateMissionBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating...';
+
+    try {
+      const res = await fetch('/api/generate-mission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          weakness: pendingSuggestion.weakness,
+          difficulty: pendingSuggestion.difficulty,
+          language: selectedLang
+        })
+      });
+      const data = await res.json();
+      if (data.error) { alert('Error: ' + data.error); return; }
+      window.location.href = `/mission/${data.mission_id}`;
+    } catch(e) {
+      alert('Something went wrong: ' + e.message);
+      btn.disabled = false;
+      btn.textContent = '⚡ Accept Mission';
     }
   }
 
@@ -474,8 +605,7 @@ function handleFileUpload(input) {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        document.getElementById('codeInput').value = e.target.result;
-        updateCount();
+        editor.setValue(e.target.result, -1);
         uploadedFile = file;
         document.getElementById('uploadedFileName').textContent = '✓ ' + file.name;
         document.getElementById('uploadedFileName').style.display = 'block';

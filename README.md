@@ -1,15 +1,15 @@
-# ⚡ CodeSensei — AI Code Review Assistant
+# ⚡ ascend - AI Code Review Assistant
 
 An AI-powered code mentor for junior developers that reviews your code, 
 explains issues in plain English, and tracks your improvement over time.
 
-🔗 **Live Demo:** https://codesensei-0r9d.onrender.com
+🔗 **Live Demo:** https://ascend-0r9d.onrender.com
 
 ## Features
 - 🐛 Bug detection with plain English explanations
 - 🔒 Security vulnerability analysis
 - ⚡ Performance issue identification
-- 📈 Pattern tracking — know your repeated mistakes
+- 📈 Pattern tracking - know your repeated mistakes
 - 📊 Skill dashboard with weakness detection
 - 🌐 Supports Python, JavaScript, Java, C++, TypeScript, Go, Rust, SQL
 
@@ -28,8 +28,8 @@ explains issues in plain English, and tracks your improvement over time.
 
 ## Run locally
 ```bash
-git clone https://github.com/bluepixxiee/codesensei.git
-cd codesensei
+git clone https://github.com/bluepixxiee/ascend.git
+cd ascend
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
