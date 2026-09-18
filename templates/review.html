@@ -3,241 +3,157 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Review - ascend</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+  <title>Code Review — Ascend</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
   <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --bg: #05010f; --surface: #0d0a1a; --surface2: #13102a;
-      --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.13);
-      --accent: #6366f1; --accent2: #a78bfa; --accent3: #fcd34d;
-      --green: #10b981; --red: #f43f5e; --amber: #f59e0b;
-      --text: #f5f3ee; --muted: #6b7280; --muted2: #9ca3af;
-    }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    .orb { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
-    .orb-1 { width: 500px; height: 500px; background: rgba(99,102,241,0.08); top: -150px; left: -100px; }
-    .orb-2 { width: 400px; height: 400px; background: rgba(167,139,250,0.05); bottom: 0; right: -100px; }
-
-    nav { padding: 18px 48px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(5,1,15,0.8); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; }
-    .logo { font-family: 'General Sans', sans-serif; font-size: 18px; font-weight: 700; text-decoration: none; color: var(--text); display: flex; align-items: center; gap: 8px; }
-    .logo-icon { width: 26px; height: 26px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
-    .logo span { color: var(--accent2); }
-    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; border-radius: 100px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; box-shadow: 0 4px 16px rgba(99,102,241,0.3); }
-    .btn-primary:hover { transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .btn-ghost { background: rgba(255,255,255,0.05); color: var(--muted2); border: 1px solid var(--border-bright); }
-    .btn-ghost:hover { color: var(--text); }
-    .btn-large { padding: 13px 32px; font-size: 15px; width: 100%; justify-content: center; }
-
-    .container { max-width: 1100px; margin: 0 auto; padding: 48px 24px 80px; position: relative; z-index: 1; }
-    .page-header { margin-bottom: 32px; }
-    .page-header h1 { font-family: 'General Sans', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -1px; margin-bottom: 4px; }
-    .page-header p { font-size: 14px; color: var(--muted2); }
-
-    /* MAIN LAYOUT */
     .review-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-
-    /* GLASS CARD */
-    .glass-card { background: rgba(255,255,255,0.01); border-radius: 20px; padding: 28px; position: relative; overflow: hidden; }
-    .glass-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(180deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.04) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.08) 100%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
-    .card-title { font-family: 'General Sans', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
-
-    /* LANGUAGE SELECTOR */
+    
     .lang-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
-    .lang-btn { padding: 10px 8px; border-radius: 10px; border: 1px solid var(--border-bright); background: rgba(255,255,255,0.02); color: var(--muted2); font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.2s; text-align: center; }
-    .lang-btn:hover { border-color: var(--accent); color: var(--text); }
-    .lang-btn.active { border-color: var(--accent); background: rgba(99,102,241,0.15); color: var(--accent2); font-weight: 600; }
+    .lang-btn {
+      padding: 10px 8px;
+      clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+      border: 1px solid var(--white-10);
+      background: var(--surface2);
+      color: var(--white-60);
+      font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .lang-btn:hover { border-color: var(--gold); color: var(--white); }
+    .lang-btn.active { border-color: var(--gold); background: var(--gold-dim); color: var(--gold); font-weight: 700; }
 
-    /* CODE EDITOR */
+    .file-upload-area {
+      border: 1px dashed var(--white-20);
+      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+      padding: 18px; text-align: center; cursor: pointer; transition: all 0.2s;
+      background: var(--surface2);
+    }
+    .file-upload-area:hover { border-color: var(--gold); background: var(--gold-dim); }
+
     .editor-wrap { position: relative; }
-    .editor-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface2); border-radius: 12px 12px 0 0; padding: 10px 16px; border: 1px solid var(--border-bright); border-bottom: none; }
+    .editor-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface2);
+      clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%);
+      padding: 10px 16px; border: 1px solid var(--white-10); border-bottom: none;
+    }
     .editor-dots { display: flex; gap: 6px; }
     .editor-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-r { background: #ff5f57; }
-    .dot-y { background: #febc2e; }
-    .dot-g { background: #28c840; }
-    .editor-lang { font-size: 12px; color: var(--muted); font-weight: 500; }
-    .char-count { font-size: 11px; color: var(--muted); }
+    .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
+    .editor-lang { font-size: 12px; color: var(--white-60); font-weight: 600; }
+    .char-count { font-size: 11px; color: var(--white-60); font-weight: 600; }
 
-    textarea#codeInput {
-      width: 100%;
-      min-height: 320px;
-      background: var(--surface2);
-      border: 1px solid var(--border-bright);
-      border-radius: 0 0 12px 12px;
-      padding: 16px;
-      color: #a8b3c8;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 13px;
-      line-height: 1.7;
-      resize: vertical;
-      outline: none;
-      transition: border-color 0.2s;
-      tab-size: 2;
-    }
-
-    textarea#codeInput:focus { border-color: var(--accent); }
-    textarea#codeInput::placeholder { color: var(--muted); }
-
-    /* LOADER */
     .loader { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 48px; }
     .loader.show { display: flex; }
-    .loader-ring { width: 48px; height: 48px; border: 3px solid rgba(99,102,241,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .loader-ring { width: 48px; height: 48px; border: 3px solid rgba(232, 163, 61, 0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loader-text { font-size: 14px; color: var(--muted2); text-align: center; }
-    .loader-sub { font-size: 12px; color: var(--muted); }
+    .loader-text { font-size: 14px; color: var(--white-80); text-align: center; font-weight: 600; }
+    .loader-sub { font-size: 12px; color: var(--white-60); }
 
-    /* RESULTS */
     .results { display: none; }
     .results.show { display: block; }
 
-    /* SCORE HEADER */
-    .score-header { display: flex; align-items: center; gap: 20px; background: var(--surface2); border-radius: 14px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
+    .score-header { display: flex; align-items: center; gap: 20px; background: var(--surface2); border-radius: 14px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--white-10); }
     .score-ring { position: relative; width: 72px; height: 72px; flex-shrink: 0; }
     .score-ring svg { width: 72px; height: 72px; transform: rotate(-90deg); }
     .score-ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 6; }
     .score-ring-fill { fill: none; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 195; stroke-dashoffset: 195; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1); }
-    .score-ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'General Sans', sans-serif; font-size: 16px; font-weight: 700; }
-    .score-info h3 { font-family: 'General Sans', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-    .score-info p { font-size: 13px; color: var(--muted2); line-height: 1.5; }
+    .score-ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; }
 
-    /* ISSUE CARDS */
     .issues-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-    .issue-card { background: var(--surface2); border-radius: 14px; padding: 16px; border: 1px solid var(--border); transition: border-color 0.2s; }
-    .issue-card:hover { border-color: var(--border-bright); }
+    .issue-card { background: var(--surface2); border-radius: 14px; padding: 16px; border: 1px solid var(--white-10); transition: border-color 0.2s; animation: fadeUp 0.4s ease both; }
+    .issue-card:hover { border-color: var(--gold); }
     .issue-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .issue-type { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .issue-type { padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
     .type-bug { background: rgba(244,63,94,0.15); color: #fb7185; }
     .type-security { background: rgba(245,158,11,0.15); color: #fbbf24; }
-    .type-performance { background: rgba(99,102,241,0.15); color: #818cf8; }
+    .type-performance { background: rgba(124,58,237,0.15); color: #a78bfa; }
     .type-style { background: rgba(16,185,129,0.15); color: #34d399; }
-    .issue-severity { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
-    .sev-high { background: rgba(244,63,94,0.1); color: #f87171; }
-    .sev-medium { background: rgba(245,158,11,0.1); color: #fbbf24; }
-    .sev-low { background: rgba(16,185,129,0.1); color: #34d399; }
-    .issue-line { font-size: 11px; color: var(--muted); margin-left: auto; font-family: 'Courier New', monospace; }
-    .issue-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-    .issue-desc { font-size: 13px; color: var(--muted2); line-height: 1.6; margin-bottom: 10px; }
-    .issue-fix { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #6ee7b7; font-family: 'Courier New', monospace; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
-    .issue-lesson { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; background: rgba(99,102,241,0.06); border-radius: 8px; padding: 10px 12px; }
-    .lesson-icon { font-size: 14px; flex-shrink: 0; }
-    .lesson-text { font-size: 12px; color: var(--muted2); line-height: 1.6; }
+    .issue-severity { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .sev-high { background: rgba(244,63,94,0.15); color: #f87171; }
+    .sev-medium { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .sev-low { background: rgba(16,185,129,0.15); color: #34d399; }
+    .issue-line { font-size: 11px; color: var(--white-60); margin-left: auto; font-family: 'Courier New', monospace; }
+    .issue-title { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+    .issue-desc { font-size: 13px; color: var(--white-80); line-height: 1.6; margin-bottom: 10px; }
+    .issue-fix { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #6ee7b7; font-family: 'Courier New', monospace; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+    .issue-lesson { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; background: var(--gold-dim); border-radius: 8px; padding: 10px 12px; }
+    .lesson-text { font-size: 12px; color: var(--white-80); line-height: 1.6; }
 
-    /* STRENGTHS */
-    .strengths { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
-    .strengths-title { font-size: 13px; font-weight: 600; color: #34d399; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-    .strength-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--muted2); margin-bottom: 6px; line-height: 1.5; }
-    .strength-item:last-child { margin-bottom: 0; }
+    .strengths { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
+    .strengths-title { font-size: 13px; font-weight: 700; color: #34d399; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .strength-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--white-80); margin-bottom: 6px; line-height: 1.5; }
 
-    /* TOP LEARNING */
-    .top-learning { background: rgba(252,211,77,0.06); border: 1px solid rgba(252,211,77,0.15); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
-    .learning-title { font-size: 13px; font-weight: 600; color: var(--accent3); margin-bottom: 6px; }
-    .learning-text { font-size: 13px; color: var(--muted2); line-height: 1.6; }
-
-    /* EMPTY STATE */
-    .no-issues { text-align: center; padding: 40px; }
-    .no-issues-icon { font-size: 40px; margin-bottom: 12px; }
-    .no-issues h3 { font-size: 16px; font-weight: 600; color: var(--green); margin-bottom: 6px; }
-    .no-issues p { font-size: 13px; color: var(--muted2); }
-
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-    .container { animation: fadeUp 0.5s ease both; }
-    .issue-card { animation: fadeUp 0.4s ease both; }
-
-    .file-upload-area {
-    border: 1px dashed var(--border-bright);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: rgba(255,255,255,0.01);
-}
-.file-upload-area:hover {
-    border-color: var(--accent);
-    background: rgba(99,102,241,0.04);
-}
+    .top-learning { background: var(--gold-dim); border: 1px solid rgba(232, 163, 61, 0.3); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
+    .learning-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 6px; }
+    .learning-text { font-size: 13px; color: var(--white-80); line-height: 1.6; }
 
     /* MISSION SUGGESTION CARD */
     .mission-suggest {
-      display: none;
-      margin-top: 12px;
-      background: rgba(99,102,241,0.06);
-      border: 1px solid rgba(99,102,241,0.25);
-      border-radius: 16px;
-      padding: 18px 20px;
-      animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+      display: none; margin-top: 16px;
+      background: rgba(124,58,237,0.12);
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 16px; padding: 20px;
+      animation: slideUp 0.4s ease both;
     }
     .mission-suggest.show { display: block; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     .suggest-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
     .suggest-icon { font-size: 28px; flex-shrink: 0; }
-    .suggest-text h4 { font-family: 'General Sans', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
-    .suggest-text p { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+    .suggest-text h4 { font-size: 15px; font-weight: 800; color: var(--gold); margin-bottom: 3px; }
+    .suggest-text p { font-size: 12px; color: var(--white-80); line-height: 1.5; }
     .suggest-tags { display: flex; gap: 6px; margin-bottom: 14px; }
-    .stag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-    .stag-weakness { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
-    .stag-easy { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
-    .stag-normal { background: rgba(99,102,241,0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); }
-    .stag-boss { background: rgba(244,63,94,0.12); color: #fb7185; border: 1px solid rgba(244,63,94,0.2); }
-    .suggest-actions { display: flex; gap: 8px; }
-    .btn-suggest { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; border: none; transition: all 0.2s; justify-content: center; }
-    .btn-suggest-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; box-shadow: 0 4px 14px rgba(99,102,241,0.3); }
-    .btn-suggest-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
-    .btn-suggest-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .btn-suggest-ghost { background: rgba(255,255,255,0.04); color: var(--muted2); border: 1px solid var(--border-bright); }
-    .btn-suggest-ghost:hover { color: var(--text); }
+    .suggest-actions { display: flex; gap: 10px; }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
 </head>
 <body>
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
+<div class="bg-grid"></div>
+<div class="orb orb-gold"></div>
+<div class="orb orb-purple"></div>
 
-<nav>
-  <a href="/" class="logo">
-    <div class="logo-icon">⚡</div>
-    Ascend
+<!-- NAV -->
+<nav class="cyber-nav">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-mark">⚡</div>
+    <span class="nav-logo-text">ASCEND</span>
   </a>
-  <div style="display:flex; gap:8px;">
-    <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+  <div class="nav-right">
+    <a href="/dashboard" class="btn-cyber btn-ghost-cyber">← Dashboard</a>
   </div>
 </nav>
 
-<div class="container">
-  <div class="page-header">
-    <h1>Code Review</h1>
-    <p>Paste your code and get instant AI-powered feedback with explanations.</p>
-  </div>
+<!-- MAIN CONTAINER -->
+<div class="cyber-container">
+  <div class="page-title">⚡ Code Review</div>
+  <div class="page-sub" style="margin-bottom:28px;">Paste your code and get instant AI-powered feedback with explanations.</div>
 
   <div class="review-layout">
 
     <!-- LEFT: INPUT -->
     <div>
-      <div class="glass-card">
+      <div class="cyber-card">
         <div class="card-title">⚡ Submit Code</div>
 
-        <div style="margin-bottom:12px;">
-          <div style="font-size:12px; font-weight:600; color:var(--muted2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Language</div>
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px; font-weight:700; color:var(--white-60); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Language</div>
           <div class="lang-grid">
             {% for lang in ['Python', 'JavaScript', 'Java', 'C++', 'TypeScript', 'Go', 'Rust', 'SQL'] %}
               <button class="lang-btn {% if lang == 'Python' %}active{% endif %}" onclick="selectLang(this, '{{ lang }}')">{{ lang }}</button>
             {% endfor %}
           </div>
         </div>
-        <div style="margin-bottom:16px;">
-            <div style="font-size:12px; font-weight:600; color:var(--muted2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Upload File (optional)</div>
-            <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click()">
-              <input type="file" id="fileInput" accept=".py,.js,.java,.cpp,.ts,.go,.rs,.sql,.c,.cs" style="display:none;" onchange="handleFileUpload(this)">
-                <div style="font-size:24px; margin-bottom:8px;">📁</div>
-                <div style="font-size:13px; color:var(--muted2);">Click to upload a code file</div>
-                <div style="font-size:11px; color:var(--muted); margin-top:4px;">.py .js .java .cpp .ts .go .rs .sql</div>
-                <div id="uploadedFileName" style="font-size:12px; color:var(--green); margin-top:8px; display:none;"></div>
+
+        <div style="margin-bottom:18px;">
+          <div style="font-size:11px; font-weight:700; color:var(--white-60); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Upload File (optional)</div>
+          <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click()">
+            <input type="file" id="fileInput" accept=".py,.js,.java,.cpp,.ts,.go,.rs,.sql" style="display:none;" onchange="handleFileUpload(this)">
+            <div style="font-size:24px; margin-bottom:6px;">📁</div>
+            <div style="font-size:13px; color:var(--white-80); font-weight:600;">Click to upload a code file</div>
+            <div style="font-size:11px; color:var(--white-60); margin-top:4px;">.py .js .java .cpp .ts .go .rs .sql</div>
+            <div id="uploadedFileName" style="font-size:12px; color:var(--green); margin-top:8px; display:none; font-weight:700;"></div>
           </div>
         </div>
+
         <div class="editor-wrap">
           <div class="editor-bar">
             <div class="editor-dots">
@@ -248,17 +164,17 @@
             <span class="editor-lang" id="editorLang">Python</span>
             <span class="char-count" id="charCount">0 / 5000</span>
           </div>
-          <div id="aceEditor" style="min-height: 320px; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--border-bright);"></div>
+          <div id="aceEditor" style="height: 340px; width: 100%; position: relative; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--white-10);"></div>
           <textarea id="codeInput" style="display:none;"></textarea>
         </div>
 
-        <div style="margin-top:16px;">
-          <button class="btn btn-primary btn-large" id="reviewBtn" onclick="submitReview()">
+        <div style="margin-top:20px;">
+          <button class="btn-cyber btn-gold btn-large" id="reviewBtn" onclick="submitReview()">
             ⚡ Review My Code
           </button>
         </div>
 
-        <div style="margin-top:12px; font-size:12px; color:var(--muted); text-align:center;">
+        <div style="margin-top:12px; font-size:12px; color:var(--white-60); text-align:center;">
           Powered by Llama 3 70B via Groq · Results in ~5 seconds
         </div>
       </div>
@@ -266,27 +182,27 @@
 
     <!-- RIGHT: OUTPUT -->
     <div>
-      <div class="glass-card">
+      <div class="cyber-card">
         <div class="card-title">📋 Review Results</div>
 
         <!-- DEFAULT STATE -->
         <div id="defaultState" style="text-align:center; padding:60px 20px;">
           <div style="font-size:48px; margin-bottom:16px;">🔍</div>
-          <div style="font-size:15px; font-weight:500; color:var(--muted2); margin-bottom:8px;">Ready to review</div>
-          <div style="font-size:13px; color:var(--muted);">Paste your code on the left and hit Review.</div>
+          <div style="font-size:15px; font-weight:700; color:var(--white-80); margin-bottom:8px;">Ready to review</div>
+          <div style="font-size:13px; color:var(--white-60);">Paste your code on the left and hit Review.</div>
         </div>
 
         <!-- LOADER -->
         <div class="loader" id="loader">
           <div class="loader-ring"></div>
-          <div class="loader-text">Analyzing your code...</div>
-          <div class="loader-sub">Llama 3 70B is reviewing for bugs, security issues, and more</div>
+          <div class="loader-text">Analyzing your code with Llama 3…</div>
+          <div class="loader-sub">Checking bugs, security, performance & style</div>
         </div>
 
         <!-- RESULTS -->
         <div class="results" id="results">
 
-          <!-- SCORE -->
+          <!-- SCORE HEADER -->
           <div class="score-header">
             <div class="score-ring">
               <svg viewBox="0 0 72 72">
@@ -296,7 +212,7 @@
               <div class="score-ring-num" id="scoreNum">0</div>
             </div>
             <div class="score-info">
-              <h3 id="scoreLabel">Analyzing...</h3>
+              <h3 id="scoreLabel">Overall Score</h3>
               <p id="scoreSummary"></p>
             </div>
           </div>
@@ -316,13 +232,15 @@
           <!-- ISSUES -->
           <div id="issuesContainer"></div>
 
-          <!-- VIEW FULL REPORT -->
-          <a id="reportLink" href="#" class="btn btn-primary btn-large" style="margin-top:8px; display:none;">
+          <!-- ACTIONS -->
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <a id="reportLink" href="#" class="btn-cyber btn-gold btn-large" style="display:none;">
               📊 View Full Report →
-          </a>
-          <button id="downloadPdf" class="btn btn-ghost btn-large" style="margin-top:8px; display:none;">
+            </a>
+            <button id="downloadPdf" class="btn-cyber btn-ghost-cyber btn-large" style="display:none;">
               ↓ Download PDF Report
-          </button>
+            </button>
+          </div>
 
           <!-- MISSION SUGGESTION CARD -->
           <div class="mission-suggest" id="missionSuggest">
@@ -335,10 +253,10 @@
             </div>
             <div class="suggest-tags" id="suggestTags"></div>
             <div class="suggest-actions">
-              <button class="btn-suggest btn-suggest-primary" id="generateMissionBtn" onclick="generateMission()">
+              <button class="btn-cyber btn-gold" id="generateMissionBtn" style="flex:1;" onclick="generateMission()">
                 ⚡ Accept Mission
               </button>
-              <button class="btn-suggest btn-suggest-ghost" onclick="dismissMission()">
+              <button class="btn-cyber btn-ghost-cyber" style="flex:1;" onclick="dismissMission()">
                 Maybe later
               </button>
             </div>
@@ -400,13 +318,13 @@
     const len = code.length;
     const el = document.getElementById('charCount');
     el.textContent = `${len} / 5000`;
-    el.style.color = len > 4500 ? '#f43f5e' : 'var(--muted)';
+    el.style.color = len > 4500 ? '#f43f5e' : 'var(--white-60)';
   }
 
   async function submitReview() {
     const code = editor.getValue().trim();
     if (!code) { alert('Please paste some code first.'); return; }
-    if (code.length > 5000) { alert('Code is too long - max 5000 characters.'); return; }
+    if (code.length > 5000) { alert('Code is too long — max 5000 characters.'); return; }
 
     document.getElementById('defaultState').style.display = 'none';
     document.getElementById('results').classList.remove('show');
@@ -427,7 +345,6 @@
       currentReviewId = data.review_id;
       renderResults(data.result);
 
-      // show mission suggestion if API recommends one
       if (data.mission_suggestion) {
         showMissionSuggestion(data.mission_suggestion);
       }
@@ -452,14 +369,12 @@
     document.getElementById('suggestIcon').textContent = icons[suggestion.weakness] || '⚔️';
     document.getElementById('suggestMsg').textContent = suggestion.message;
 
-    const diffClass = `stag-${suggestion.difficulty}`;
     document.getElementById('suggestTags').innerHTML = `
-      <span class="stag stag-weakness">${suggestion.weakness}</span>
-      <span class="stag ${diffClass}">${diffLabels[suggestion.difficulty] || suggestion.difficulty}</span>
-      <span class="stag" style="background:rgba(99,102,241,0.1);color:var(--accent2);border:1px solid rgba(99,102,241,0.2);">${selectedLang}</span>
+      <span class="cyber-tag tag-gold">${suggestion.weakness}</span>
+      <span class="cyber-tag tag-purple">${diffLabels[suggestion.difficulty] || suggestion.difficulty}</span>
+      <span class="cyber-tag tag-green">${selectedLang}</span>
     `;
 
-    // small delay so it appears after the results settle
     setTimeout(() => card.classList.add('show'), 600);
   }
 
@@ -501,118 +416,112 @@
     const summary = result.summary || '';
     const topLearning = result.top_learning || '';
 
-    // score ring
-    const circumference = 2 * Math.PI * 31;
-    const offset = circumference - (score / 100) * circumference;
-    const fill = document.getElementById('scoreRingFill');
-    const color = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#f43f5e';
-    fill.style.stroke = color;
-    fill.style.strokeDasharray = circumference;
-    setTimeout(() => { fill.style.strokeDashoffset = offset; }, 100);
-    document.getElementById('scoreNum').textContent = score;
-    document.getElementById('scoreNum').style.color = color;
+    document.getElementById('results').classList.add('show');
 
-    const label = score >= 70 ? '✨ Good code' : score >= 50 ? '⚠️ Needs work' : '🔴 Major issues';
+    // Score ring animation
+    const ringFill = document.getElementById('scoreRingFill');
+    const scoreNum = document.getElementById('scoreNum');
+    const strokeDash = 195 - (195 * (score / 100));
+
+    const color = score >= 70 ? '#10B981' : score >= 50 ? '#E8A33D' : '#F43F5E';
+    ringFill.style.stroke = color;
+    scoreNum.style.color = color;
+    scoreNum.textContent = score;
+
+    setTimeout(() => { ringFill.style.strokeDashoffset = strokeDash; }, 100);
+
+    const labels = { 80: '✨ Great Code!', 60: '👍 Decent Code', 0: '⚠️ Needs Attention' };
+    let label = '⚠️ Needs Attention';
+    if (score >= 80) label = '✨ Great Code!';
+    else if (score >= 60) label = '👍 Decent Code';
+
     document.getElementById('scoreLabel').textContent = label;
     document.getElementById('scoreSummary').textContent = summary;
 
-    // strengths
+    // Strengths
+    const sBox = document.getElementById('strengthsBox');
     if (strengths.length > 0) {
-      document.getElementById('strengthsBox').style.display = 'block';
+      sBox.style.display = 'block';
       document.getElementById('strengthsList').innerHTML = strengths.map(s =>
-        `<div class="strength-item"><span>✓</span>${s}</div>`
+        `<div class="strength-item"><span>✓</span><span>${s}</span></div>`
       ).join('');
-    }
+    } else { sBox.style.display = 'none'; }
 
-    // top learning
+    // Top Learning
+    const lBox = document.getElementById('learningBox');
     if (topLearning) {
-      document.getElementById('learningBox').style.display = 'block';
+      lBox.style.display = 'block';
       document.getElementById('learningText').textContent = topLearning;
-    }
+    } else { lBox.style.display = 'none'; }
 
-    // issues
+    // Issues
     const container = document.getElementById('issuesContainer');
     if (issues.length === 0) {
       container.innerHTML = `
-        <div class="no-issues">
-          <div class="no-issues-icon">🎉</div>
-          <h3>No issues found!</h3>
-          <p>Your code looks clean. Keep it up!</p>
+        <div class="cyber-card" style="text-align:center; padding:30px;">
+          <div style="font-size:36px; margin-bottom:8px;">🎉</div>
+          <div style="font-size:16px; font-weight:700; color:var(--green);">No issues found!</div>
+          <div style="font-size:13px; color:var(--white-60);">Your code looks clean and well structured.</div>
         </div>`;
     } else {
       container.innerHTML = `
-        <div style="font-size:13px; font-weight:600; color:var(--muted2); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.06em;">
-          ${issues.length} issue${issues.length > 1 ? 's' : ''} found
-        </div>
+        <div class="card-title" style="margin-top:10px;">Detected Issues (${issues.length})</div>
         <div class="issues-list">
-          ${issues.map(issue => `
+          ${issues.map(iss => `
             <div class="issue-card">
               <div class="issue-header">
-                <span class="issue-type type-${issue.type || 'style'}">${issue.type || 'style'}</span>
-                <span class="issue-severity sev-${issue.severity || 'medium'}">${issue.severity || 'medium'}</span>
-                ${issue.line ? `<span class="issue-line">Line ${issue.line}</span>` : ''}
+                <span class="issue-type type-${iss.type}">${iss.type}</span>
+                <span class="issue-severity sev-${iss.severity}">${iss.severity}</span>
+                ${iss.line_number ? `<span class="issue-line">Line ${iss.line_number}</span>` : ''}
               </div>
-              <div class="issue-title">${issue.title || 'Issue detected'}</div>
-              <div class="issue-desc">${issue.description || ''}</div>
-              ${issue.fix ? `<div class="issue-fix">${escapeHtml(issue.fix)}</div>` : ''}
-              ${issue.lesson ? `
+              <div class="issue-title">${iss.title}</div>
+              <div class="issue-desc">${iss.description}</div>
+              ${iss.suggested_fix ? `<div class="issue-fix">${iss.suggested_fix}</div>` : ''}
+              ${iss.lesson ? `
                 <div class="issue-lesson">
-                  <span class="lesson-icon">💡</span>
-                  <span class="lesson-text">${issue.lesson}</span>
+                  <span class="lesson-text">💡 <strong>Lesson:</strong> ${iss.lesson}</span>
                 </div>` : ''}
-            </div>`).join('')}
+            </div>
+          `).join('')}
         </div>`;
     }
 
-    
-    // report links
     if (currentReviewId) {
-        const link = document.getElementById('reportLink');
-        link.href = `/report/${currentReviewId}`;
-        link.style.display = 'flex';
-        const dlBtn = document.getElementById('downloadPdf');
-        if (dlBtn) dlBtn.style.display = 'flex';
-        dlBtn.onclick = () => { window.location.href = `/api/download-report/${currentReviewId}`; };
+      const rLink = document.getElementById('reportLink');
+      rLink.href = `/report/${currentReviewId}`;
+      rLink.style.display = 'inline-flex';
+
+      const dBtn = document.getElementById('downloadPdf');
+      dBtn.style.display = 'inline-flex';
+      dBtn.onclick = () => window.location.href = `/api/download-report/${currentReviewId}`;
     }
-
-    document.getElementById('results').classList.add('show');
-    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function escapeHtml(text) {
-    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  let uploadedFile = null;
-
-function handleFileUpload(input) {
+  function handleFileUpload(input) {
     const file = input.files[0];
     if (!file) return;
 
-    // detect language from extension
     const ext = file.name.split('.').pop().toLowerCase();
     const langMap = {
-        'py': 'Python', 'js': 'JavaScript', 'java': 'Java',
-        'cpp': 'C++', 'ts': 'TypeScript', 'go': 'Go',
-        'rs': 'Rust', 'sql': 'SQL', 'c': 'C++', 'cs': 'C++'
+      'py': 'Python', 'js': 'JavaScript', 'java': 'Java',
+      'cpp': 'C++', 'ts': 'TypeScript', 'go': 'Go',
+      'rs': 'Rust', 'sql': 'SQL'
     };
 
     if (langMap[ext]) {
-        const langBtn = [...document.querySelectorAll('.lang-btn')]
-            .find(b => b.textContent === langMap[ext]);
-        if (langBtn) selectLang(langBtn, langMap[ext]);
+      const langBtn = [...document.querySelectorAll('.lang-btn')].find(b => b.textContent === langMap[ext]);
+      if (langBtn) selectLang(langBtn, langMap[ext]);
     }
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        editor.setValue(e.target.result, -1);
-        uploadedFile = file;
-        document.getElementById('uploadedFileName').textContent = '✓ ' + file.name;
-        document.getElementById('uploadedFileName').style.display = 'block';
-        document.getElementById('fileUploadArea').style.borderColor = 'var(--green)';
+      editor.setValue(e.target.result, -1);
+      document.getElementById('uploadedFileName').textContent = '✓ ' + file.name;
+      document.getElementById('uploadedFileName').style.display = 'block';
+      document.getElementById('fileUploadArea').style.borderColor = 'var(--green)';
     };
     reader.readAsText(file);
-}
+  }
 </script>
 </body>
 </html>

@@ -178,7 +178,7 @@ def generate_mission(weakness_type, difficulty, language, user_name):
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=1800
@@ -232,30 +232,39 @@ def evaluate_solution(original_buggy_code, user_solution, weakness_type, languag
         f"Return ONLY the JSON object."
     )
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3,
-        max_tokens=800
-    )
-
-    raw = response.choices[0].message.content.strip()
-    raw = re.sub(r'```json\s*', '', raw)
-    raw = re.sub(r'```\s*', '', raw)
-    raw = raw.strip()
-
     try:
-        return json.loads(raw)
-    except:
+        response = client.chat.completions.create(
+            model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=800
+        )
+        raw = response.choices[0].message.content.strip()
+        raw = re.sub(r'```json\s*', '', raw)
+        raw = re.sub(r'```\s*', '', raw)
+        raw = raw.strip()
+
         try:
-            start = raw.index('{')
-            end = raw.rindex('}') + 1
-            return json.loads(raw[start:end])
+            return json.loads(raw)
         except:
-            return {
-                "passed": True,
-                "score": 70,
-                "feedback": "Good attempt! Keep practicing to improve your skills.",
-                "issues_fixed": ["Main issues addressed"],
-                "issues_remaining": []
-            }
+            try:
+                start = raw.index('{')
+                end = raw.rindex('}') + 1
+                return json.loads(raw[start:end])
+            except:
+                return {
+                    "passed": True,
+                    "score": 70,
+                    "feedback": "Good attempt! Keep practicing to improve your skills.",
+                    "issues_fixed": ["Main issues addressed"],
+                    "issues_remaining": []
+                }
+    except Exception as e:
+        print(f"Groq solution evaluation warning: {e}")
+        return {
+            "passed": True,
+            "score": 70,
+            "feedback": "Good attempt! We couldn't fully evaluate your solution right now, but keep practicing.",
+            "issues_fixed": ["Main issues addressed"],
+            "issues_remaining": []
+        }

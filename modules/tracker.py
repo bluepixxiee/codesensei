@@ -2,7 +2,9 @@ from modules.auth import Review, db
 from sqlalchemy import func
 
 def get_user_stats(user_id):
-    reviews = Review.query.filter_by(user_id=user_id).all()
+    # explicit ordering matters here: score_trend below assumes chronological
+    # order, and SQL does not guarantee row order without an ORDER BY.
+    reviews = Review.query.filter_by(user_id=user_id).order_by(Review.created_at.asc()).all()
 
     if not reviews:
         return {
@@ -43,10 +45,10 @@ def get_user_stats(user_id):
         lang_counts[r.language] = lang_counts.get(r.language, 0) + 1
     most_used_language = max(lang_counts, key=lang_counts.get)
 
-    # score trend (last 7 reviews)
+    # score trend (last 7 reviews, oldest -> newest since `reviews` is ascending)
     score_trend = [r.overall_score for r in reviews[-7:]]
 
-    # recent reviews
+    # recent reviews (newest first)
     recent = sorted(reviews, key=lambda r: r.created_at, reverse=True)[:5]
     recent_reviews = [{
         "id": r.id,

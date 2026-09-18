@@ -79,12 +79,36 @@ def review_code(code, language):
         f"Return ONLY the JSON object, nothing else."
     )
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3,
-        max_tokens=2000
-    )
+    # Groq periodically deprecates/shuts down model IDs (see
+    # console.groq.com/docs/deprecations). GROQ_MODEL lets you override
+    # the primary choice via env var without a code change; the fallbacks
+    # below are Groq's current recommended general-purpose models as of
+    # this writing - update this list if Groq deprecates these too.
+    models_to_try = [
+        os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
+        "qwen/qwen3.6-27b",
+        "openai/gpt-oss-20b"
+    ]
+    seen = set()
+    unique_models = [m for m in models_to_try if not (m in seen or seen.add(m))]
+
+    response = None
+    last_err = None
+    for model_name in unique_models:
+        try:
+            response = client.chat.completions.create(
+                model=model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=2000
+            )
+            break
+        except Exception as e:
+            last_err = e
+            continue
+
+    if not response:
+        raise last_err
 
     raw = response.choices[0].message.content.strip()
 

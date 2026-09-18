@@ -3,270 +3,160 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{ mission.title }} - Ascend</title>
-  <meta name="description" content="Complete the {{ mission.difficulty }} mission: {{ mission.title }}. Fix the code and earn {{ mission.xp_reward }} XP."/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+  <title>{{ mission.title }} — Ascend</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
   <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --bg: #05010f;
-      --surface: #0d0a1a;
-      --surface2: #13102a;
-      --border: rgba(255,255,255,0.07);
-      --border-bright: rgba(255,255,255,0.13);
-      --accent: #6366f1;
-      --accent2: #a78bfa;
-      --accent3: #fcd34d;
-      --green: #10b981;
-      --red: #f43f5e;
-      --amber: #f59e0b;
-      --text: #f5f3ee;
-      --muted: #6b7280;
-      --muted2: #9ca3af;
+    .mission-header-card {
+      background: rgba(13, 14, 26, 0.85);
+      border-radius: 20px; padding: 28px 32px;
+      margin-bottom: 24px; position: relative; overflow: hidden;
+      border: 1px solid var(--white-10); backdrop-filter: blur(16px);
     }
-
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-    .orb { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
-    .orb-1 { width: 500px; height: 500px; background: rgba(99,102,241,0.08); top: -150px; left: -100px; }
-    .orb-2 { width: 400px; height: 400px; background: rgba(167,139,250,0.06); bottom: 0; right: -100px; }
-
-    /* NAV */
-    nav { padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(5,1,15,0.85); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; }
-    .logo { font-family: 'General Sans', sans-serif; font-size: 20px; font-weight: 700; text-decoration: none; color: var(--text); display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
-    .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-    .nav-right { display: flex; align-items: center; gap: 10px; }
-    .nav-xp { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border-bright); border-radius: 100px; padding: 6px 14px; font-size: 13px; }
-    .nav-xp .xp-val { color: var(--accent3); font-weight: 700; }
-    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 100px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; box-shadow: 0 4px 16px rgba(99,102,241,0.3); }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(99,102,241,0.4); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .btn-ghost { background: rgba(255,255,255,0.05); color: var(--muted2); border: 1px solid var(--border-bright); }
-    .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.08); }
-    .btn-large { padding: 13px 32px; font-size: 15px; width: 100%; justify-content: center; }
-
-    .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; position: relative; z-index: 1; }
-
-    /* MISSION HEADER CARD */
-    .mission-header {
-      background: rgba(255,255,255,0.01);
-      border-radius: 22px; padding: 28px 32px;
-      margin-bottom: 24px;
-      position: relative; overflow: hidden;
-    }
-    .mission-header::before {
-      content: '';
-      position: absolute; inset: 0; border-radius: inherit;
-      padding: 1px;
-      background: linear-gradient(135deg, rgba(99,102,241,0.5), rgba(167,139,250,0.2), rgba(255,255,255,0.05));
+    .mission-header-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+      background: linear-gradient(135deg, rgba(232, 163, 61, 0.35), rgba(124, 58, 237, 0.15));
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
     }
-    .mission-header::after {
-      content: '';
-      position: absolute; top: -60%; right: -5%;
-      width: 350px; height: 350px;
-      background: radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
-    .header-left { display: flex; align-items: center; gap: 16px; }
+    .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
+    .header-left { display: flex; align-items: center; gap: 18px; }
     .mission-icon-big {
-      width: 60px; height: 60px; border-radius: 16px;
+      width: 60px; height: 60px;
+      clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
       display: flex; align-items: center; justify-content: center;
       font-size: 28px; flex-shrink: 0;
     }
-    .diff-easy { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2); }
-    .diff-normal { background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2); }
-    .diff-boss { background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.2); }
-    .mission-meta-info h1 { font-family: 'General Sans', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
-    .meta-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-    .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-    .tag-lang { background: rgba(99,102,241,0.12); color: var(--accent2); border: 1px solid rgba(99,102,241,0.2); }
-    .tag-easy { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
-    .tag-normal { background: rgba(99,102,241,0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); }
-    .tag-boss { background: rgba(244,63,94,0.12); color: #fb7185; border: 1px solid rgba(244,63,94,0.2); }
-    .tag-weakness { background: rgba(245,158,11,0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
-    .header-right { text-align: right; flex-shrink: 0; }
-    .xp-badge { font-family: 'General Sans', sans-serif; font-size: 28px; font-weight: 700; color: var(--accent3); line-height: 1; }
-    .xp-badge span { font-size: 13px; color: var(--muted); font-weight: 500; }
-    .mission-desc { font-size: 14px; color: var(--muted2); line-height: 1.7; }
+    .diff-easy { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .diff-normal { background: rgba(124, 58, 237, 0.15); border: 1px solid rgba(124, 58, 237, 0.3); }
+    .diff-boss { background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
 
-    /* ALREADY COMPLETED BANNER */
-    .completed-banner {
-      display: flex; align-items: center; gap: 14px;
-      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);
-      border-radius: 14px; padding: 16px 20px; margin-bottom: 24px;
+    .mission-meta-info h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .meta-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .header-right { text-align: right; }
+    .xp-badge-large {
+      font-size: 28px; font-weight: 800; color: var(--gold);
+      line-height: 1; margin-bottom: 4px;
     }
-    .completed-banner .icon { font-size: 24px; }
-    .completed-banner .text { font-size: 13px; color: var(--muted2); line-height: 1.5; }
-    .completed-banner .text strong { color: var(--green); }
+    .xp-badge-large span { font-size: 14px; font-weight: 600; color: var(--white-60); }
 
-    /* LAYOUT */
+    .mission-desc { font-size: 14px; color: var(--white-80); line-height: 1.6; border-top: 1px solid var(--white-06); padding-top: 16px; margin-top: 8px; }
+
+    .completed-banner {
+      background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
+      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+      padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 14px;
+    }
+    .completed-banner .icon { font-size: 28px; }
+    .completed-banner .text { font-size: 13.5px; color: #6ee7b7; line-height: 1.5; }
+
     .mission-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 
-    /* GLASS CARD */
-    .glass-card { background: rgba(255,255,255,0.01); border-radius: 20px; padding: 24px; position: relative; overflow: hidden; }
-    .glass-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.07) 100%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
-    .card-title { font-family: 'General Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-
-    /* CODE EDITOR */
-    .editor-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface2); border-radius: 12px 12px 0 0; padding: 10px 16px; border: 1px solid var(--border-bright); border-bottom: none; }
+    .editor-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface2);
+      clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%);
+      padding: 10px 16px; border: 1px solid var(--white-10); border-bottom: none;
+    }
     .editor-dots { display: flex; gap: 6px; }
     .editor-dot { width: 10px; height: 10px; border-radius: 50%; }
     .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
-    .editor-label { font-size: 12px; color: var(--muted); font-weight: 500; }
-    .code-display {
-      width: 100%; min-height: 300px;
-      background: var(--surface2);
-      border: 1px solid var(--border-bright); border-radius: 0 0 12px 12px;
-      padding: 16px;
-      color: #a8b3c8;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 12.5px; line-height: 1.75;
-      white-space: pre; overflow-x: auto;
-    }
-    textarea.code-editor {
-      width: 100%; min-height: 300px;
-      background: var(--surface2);
-      border: 1px solid var(--border-bright); border-radius: 0 0 12px 12px;
-      padding: 16px;
-      color: #a8b3c8;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 12.5px; line-height: 1.75;
-      resize: vertical; outline: none;
-      transition: border-color 0.2s;
-      tab-size: 2;
-    }
-    textarea.code-editor:focus { border-color: var(--accent); }
-    textarea.code-editor::placeholder { color: var(--muted); }
+    .editor-label { font-size: 12px; color: var(--white-60); font-weight: 600; }
 
     /* HINTS */
-    .hints-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .hints-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
     .hint-item {
       display: flex; align-items: flex-start; gap: 10px;
-      background: rgba(99,102,241,0.06);
-      border: 1px solid rgba(99,102,241,0.12);
-      border-radius: 10px; padding: 10px 14px;
-      font-size: 13px; color: var(--muted2); line-height: 1.5;
-      cursor: default;
+      background: var(--surface2); border: 1px solid var(--white-10);
+      clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+      padding: 12px 14px; font-size: 13px; color: var(--white-80); line-height: 1.5;
+      cursor: pointer; transition: all 0.2s;
     }
-    .hint-num { font-size: 11px; font-weight: 700; color: var(--accent2); flex-shrink: 0; margin-top: 1px; }
+    .hint-item:hover { border-color: var(--gold); background: var(--gold-dim); }
+    .hint-num { font-size: 11px; font-weight: 800; color: var(--gold); flex-shrink: 0; margin-top: 1px; }
     .hint-text { display: none; }
     .hint-item.revealed .hint-text { display: block; }
     .hint-item.revealed .hint-placeholder { display: none; }
-    .hint-placeholder { color: var(--muted); font-size: 12px; font-style: italic; }
-    .hint-item:not(.revealed) { cursor: pointer; }
-    .hint-item:not(.revealed):hover { border-color: rgba(99,102,241,0.3); background: rgba(99,102,241,0.1); }
+    .hint-placeholder { color: var(--white-60); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; width: 100%; }
 
-    /* WHAT TO LEARN */
-    .learn-box { background: rgba(252,211,77,0.06); border: 1px solid rgba(252,211,77,0.15); border-radius: 12px; padding: 14px 16px; font-size: 13px; color: var(--muted2); line-height: 1.6; }
-    .learn-label { font-size: 11px; font-weight: 700; color: var(--accent3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .learn-box { background: var(--gold-dim); border: 1px solid rgba(232, 163, 61, 0.3); border-radius: 12px; padding: 14px 16px; font-size: 13px; color: var(--white-80); line-height: 1.6; }
+    .learn-label { font-size: 11px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
 
-    /* LOADER */
     .loader { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 40px; }
     .loader.show { display: flex; }
-    .loader-ring { width: 40px; height: 40px; border: 3px solid rgba(99,102,241,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .loader-ring { width: 40px; height: 40px; border: 3px solid rgba(232, 163, 61, 0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loader-text { font-size: 13px; color: var(--muted2); text-align: center; }
+    .loader-text { font-size: 13px; color: var(--white-80); text-align: center; font-weight: 600; }
 
-    /* RESULT PANEL */
     .result-panel { display: none; }
     .result-panel.show { display: block; }
-    .result-pass {
-      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);
-      border-radius: 14px; padding: 20px;
-    }
-    .result-fail {
-      background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.15);
-      border-radius: 14px; padding: 20px;
-    }
+    .result-pass { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 14px; padding: 20px; }
+    .result-fail { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3); border-radius: 14px; padding: 20px; }
     .result-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
     .result-icon { font-size: 28px; }
-    .result-title { font-family: 'General Sans', sans-serif; font-size: 17px; font-weight: 700; }
-    .result-score { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.06); border-radius: 20px; padding: 3px 12px; margin-left: auto; }
-    .result-feedback { font-size: 13px; color: var(--muted2); line-height: 1.7; margin-bottom: 12px; }
-    .result-list { display: flex; flex-direction: column; gap: 6px; }
-    .result-list-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted2); }
-    .result-list-item .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-    .dot-green { background: var(--green); }
-    .dot-red { background: var(--red); }
-    .result-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-    .c-green { color: var(--green); }
-    .c-red { color: var(--red); }
+    .result-title { font-size: 17px; font-weight: 800; }
+    .result-score { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; background: rgba(255,255,255,0.06); border-radius: 20px; padding: 3px 12px; margin-left: auto; }
+    .result-feedback { font-size: 13px; color: var(--white-80); line-height: 1.7; margin-bottom: 12px; }
 
-    /* XP EARNED POP */
     .xp-earned-pop { text-align: center; padding: 8px 0 16px; }
-    .xp-earned-pop .num { font-family: 'General Sans', sans-serif; font-size: 36px; font-weight: 700; color: var(--accent3); animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
-    .xp-earned-pop .label { font-size: 13px; color: var(--muted2); }
+    .xp-earned-pop .num { font-size: 36px; font-weight: 800; color: var(--gold); animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+    .xp-earned-pop .label { font-size: 13px; color: var(--white-80); font-weight: 600; }
     @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-    .container { animation: fadeUp 0.5s ease both; }
-
-    /* TOAST */
-    .toast { position: fixed; bottom: 32px; right: 32px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; padding: 16px 24px; border-radius: 16px; font-weight: 600; box-shadow: 0 8px 32px rgba(99,102,241,0.4); z-index: 1000; display: none; animation: slideIn 0.4s ease; }
+    .toast { position: fixed; bottom: 32px; right: 32px; background: linear-gradient(135deg, var(--gold), var(--purple-bright)); color: var(--black); padding: 16px 24px; font-weight: 700; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); box-shadow: 0 8px 32px rgba(232, 163, 61, 0.4); z-index: 1000; display: none; animation: slideIn 0.4s ease; }
     @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    .hint-penalty {
-      font-size: 11px; font-weight: 700; color: var(--red);
-      background: rgba(244,63,94,0.12); padding: 2px 6px;
-      border-radius: 4px; margin-left: 6px; border: 1px solid rgba(244,63,94,0.2);
-    }
+    .hint-penalty { font-size: 11px; font-weight: 700; color: var(--red); background: rgba(244,63,94,0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244,63,94,0.3); }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
 </head>
 <body>
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
+<div class="bg-grid"></div>
+<div class="orb orb-gold"></div>
+<div class="orb orb-purple"></div>
 
-<nav>
-  <a href="/" class="logo">
-    <div class="logo-icon">⚡</div>
-    Ascend
+<!-- NAV -->
+<nav class="cyber-nav">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-mark">⚡</div>
+    <span class="nav-logo-text">ASCEND</span>
   </a>
   <div class="nav-right">
-    <div class="nav-xp">
+    <div class="nav-xp-badge">
       <span>⚡</span>
-      <span class="xp-val" id="navXp">{{ user.xp }} XP</span>
+      <span id="navXp">{{ user.xp }} XP</span>
     </div>
-    <a href="/missions" class="btn btn-ghost">← Missions</a>
+    <a href="/missions" class="btn-cyber btn-ghost-cyber">← Missions</a>
   </div>
 </nav>
 
-<div class="container">
+<!-- MAIN CONTAINER -->
+<div class="cyber-container">
 
-  <!-- MISSION HEADER -->
-  <div class="mission-header">
+  <!-- MISSION HEADER CARD -->
+  <div class="mission-header-card">
     <div class="header-top">
       <div class="header-left">
         <div class="mission-icon-big diff-{{ mission.difficulty }}">
-          {% if mission.difficulty == 'boss' %}👹
-          {% elif mission.difficulty == 'easy' %}🌱
-          {% else %}⚔️
-          {% endif %}
+          {% if mission.difficulty == 'boss' %}👹{% elif mission.difficulty == 'easy' %}🌱{% else %}⚔️{% endif %}
         </div>
         <div class="mission-meta-info">
           <h1>{{ mission.title }}</h1>
           <div class="meta-tags">
-            <span class="tag tag-lang">{{ mission.language }}</span>
-            <span class="tag tag-{{ mission.difficulty }}">{{ mission.difficulty.capitalize() }}</span>
-            <span class="tag tag-weakness">{{ mission.weakness_type.capitalize() }} Focus</span>
+            <span class="cyber-tag tag-purple">{{ mission.language }}</span>
+            <span class="cyber-tag tag-gold">{{ mission.difficulty.capitalize() }}</span>
+            <span class="cyber-tag tag-green">{{ mission.weakness_type.capitalize() }} Focus</span>
           </div>
         </div>
       </div>
       <div class="header-right">
-        <div class="xp-badge" id="xpBadgeDisplay">+{{ mission.xp_reward }} <span>XP</span></div>
-        <div style="font-size:11px; color:var(--muted); margin-top:4px;">Reward</div>
+        <div class="xp-badge-large" id="xpBadgeDisplay">+{{ mission.xp_reward }} <span>XP</span></div>
+        <div style="font-size:11px; color:var(--white-60); margin-top:2px;">Reward</div>
       </div>
     </div>
     <div class="mission-desc">{{ mission.description }}</div>
   </div>
 
-  <!-- ALREADY COMPLETED -->
+  <!-- ALREADY COMPLETED BANNER -->
   {% if mission.is_completed %}
   <div class="completed-banner">
     <div class="icon">🏆</div>
@@ -282,7 +172,7 @@
 
     <!-- LEFT: BUGGY CODE + HINTS -->
     <div>
-      <div class="glass-card" style="margin-bottom:16px;">
+      <div class="cyber-card" style="margin-bottom:16px;">
         <div class="card-title">🐛 Buggy Code</div>
         <div class="editor-bar">
           <div class="editor-dots">
@@ -291,33 +181,29 @@
             <div class="editor-dot dot-g"></div>
           </div>
           <span class="editor-label">{{ mission.language }} · Read only</span>
-          <button class="btn btn-ghost" id="copyBtn" onclick="copyBuggyCode()" style="padding:4px 12px; font-size:11px;">Copy</button>
+          <button class="btn-cyber btn-ghost-cyber" id="copyBtn" onclick="copyBuggyCode()" style="padding:4px 12px; font-size:11px;">Copy</button>
         </div>
-        <div id="buggyCodeAce" style="height: 320px; width: 100%; position: relative; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--border-bright);"></div>
+        <div id="buggyCodeAce" style="height: 320px; width: 100%; position: relative; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--white-10);"></div>
       </div>
 
-      <!-- HINTS -->
-      <div class="glass-card">
-        <div class="card-title">💡 Hints <span style="font-size:11px; font-weight:400; color:var(--muted); text-transform:none; letter-spacing:0;">(click to reveal)</span></div>
-        <div class="hints-list" id="hintsList">
-          <!-- populated by JS from mission data -->
-        </div>
-        <div class="learn-box" style="margin-top:0;">
+      <!-- HINTS CARD -->
+      <div class="cyber-card">
+        <div class="card-title">💡 Hints <span style="font-size:11px; font-weight:500; color:var(--white-60); text-transform:none; letter-spacing:0;">(click to reveal)</span></div>
+        <div class="hints-list" id="hintsList"></div>
+        <div class="learn-box">
           <div class="learn-label">📚 What you'll learn</div>
-          <span id="whatToLearnText" style="color:var(--muted2); font-size:13px; line-height:1.6;">
-            <!-- populated by JS -->
-          </span>
+          <span id="whatToLearnText" style="color:var(--white-80); font-size:13px; line-height:1.6;"></span>
         </div>
       </div>
     </div>
 
     <!-- RIGHT: SOLUTION EDITOR -->
     <div>
-      <div class="glass-card">
+      <div class="cyber-card">
         <div class="card-title">✏️ Your Solution</div>
 
         {% if not mission.is_completed %}
-        <!-- EDITOR -->
+        <!-- SOLUTION EDITOR -->
         <div class="editor-bar">
           <div class="editor-dots">
             <div class="editor-dot dot-r"></div>
@@ -325,13 +211,13 @@
             <div class="editor-dot dot-g"></div>
           </div>
           <span class="editor-label" id="editorLang">{{ mission.language }}</span>
-          <span style="font-size:11px; color:var(--muted);" id="charCount">0 chars</span>
+          <span style="font-size:11px; color:var(--white-60);" id="charCount">0 chars</span>
         </div>
-        <div id="solutionAce" style="height: 320px; width: 100%; position: relative; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--border-bright);"></div>
+        <div id="solutionAce" style="height: 320px; width: 100%; position: relative; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--white-10);"></div>
         <textarea id="solutionEditor" style="display:none;"></textarea>
 
-        <div style="margin-top:16px;">
-          <button class="btn btn-primary btn-large" id="submitBtn" onclick="submitSolution()">
+        <div style="margin-top:18px;">
+          <button class="btn-cyber btn-gold btn-large" id="submitBtn" onclick="submitSolution()">
             ⚡ Submit Solution
           </button>
         </div>
@@ -342,17 +228,17 @@
           <div class="loader-text">Evaluating your solution…</div>
         </div>
 
-        <!-- RESULT -->
+        <!-- RESULT PANEL -->
         <div class="result-panel" id="resultPanel" style="margin-top:16px;">
           <div id="resultContent"></div>
-          <div id="nextActions" style="margin-top:16px; display:none;">
-            <a href="/missions" class="btn btn-ghost" style="width:100%; justify-content:center; margin-bottom:8px;">← Back to Missions</a>
-            <a href="/dashboard" class="btn btn-primary" style="width:100%; justify-content:center;">Go to Dashboard →</a>
+          <div id="nextActions" style="margin-top:16px; display:none; flex-direction:column; gap:8px;">
+            <a href="/missions" class="btn-cyber btn-ghost-cyber btn-large">← Back to Missions</a>
+            <a href="/dashboard" class="btn-cyber btn-gold btn-large">Go to Dashboard →</a>
           </div>
         </div>
 
         {% else %}
-        <!-- COMPLETED: show their solution -->
+        <!-- COMPLETED: SHOW USER SOLUTION -->
         <div class="editor-bar">
           <div class="editor-dots">
             <div class="editor-dot dot-r"></div>
@@ -361,20 +247,18 @@
           </div>
           <span class="editor-label">Your submitted solution</span>
         </div>
-        <div id="completedSolutionAce" style="height: 320px; width: 100%; position: relative; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--border-bright);"></div>
-        <div style="margin-top:16px; display:flex; gap:8px;">
-          <a href="/missions" class="btn btn-ghost" style="flex:1; justify-content:center;">← All Missions</a>
-          <a href="/review" class="btn btn-primary" style="flex:1; justify-content:center;">+ New Review</a>
+        <div id="completedSolutionAce" style="height: 320px; width: 100%; position: relative; border-radius: 0 0 12px 12px; font-size: 13px; border: 1px solid var(--white-10);"></div>
+        <div style="margin-top:18px; display:flex; gap:10px;">
+          <a href="/missions" class="btn-cyber btn-ghost-cyber" style="flex:1;">← All Missions</a>
+          <a href="/review" class="btn-cyber btn-gold" style="flex:1;">+ New Review</a>
         </div>
         {% endif %}
 
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- LEVEL UP TOAST -->
 <div class="toast" id="levelUpToast"></div>
 
 <script>
@@ -439,14 +323,14 @@
   function renderHints() {
     const container = document.getElementById('hintsList');
     if (hintsData.length === 0) {
-      container.innerHTML = '<div style="font-size:13px; color:var(--muted); padding:8px 0;">No hints available for this mission - trust yourself! 💪</div>';
+      container.innerHTML = '<div style="font-size:13px; color:var(--white-60); padding:8px 0;">No hints available for this mission — trust yourself! 💪</div>';
     } else {
       container.innerHTML = hintsData.map((hint, i) => `
         <div class="hint-item" id="hint-${i}" onclick="revealHint(${i})">
           <span class="hint-num">#${i+1}</span>
           <div style="flex:1;">
             <div class="hint-placeholder">
-              Click to reveal hint ${i+1}
+              <span>Click to reveal hint ${i+1}</span>
               ${!IS_COMPLETED ? `<span class="hint-penalty">-${PENALTY_PER_HINT} XP</span>` : ''}
             </div>
             <div class="hint-text">${hint}</div>
@@ -476,7 +360,7 @@
     if (badge) {
       badge.innerHTML = `+${currentReward} <span>XP</span>`;
       if (totalPenalty > 0) {
-        badge.style.color = '#fbbf24';
+        badge.style.color = '#F59E0B';
       }
     }
   }
@@ -485,11 +369,13 @@
     const toast = document.getElementById('levelUpToast');
     if (toast) {
       toast.textContent = msg;
-      toast.style.background = 'linear-gradient(135deg, #f43f5e, #e11d48)';
+      toast.style.background = 'linear-gradient(135deg, #F43F5E, #E11D48)';
+      toast.style.color = '#FFFFFF';
       toast.style.display = 'block';
       setTimeout(() => { 
         toast.style.display = 'none';
-        toast.style.background = 'linear-gradient(135deg, var(--accent), var(--accent2))';
+        toast.style.background = 'linear-gradient(135deg, var(--gold), var(--purple-bright))';
+        toast.style.color = 'var(--black)';
       }, 3000);
     }
   }
@@ -552,10 +438,12 @@
     const fixed = ev.issues_fixed || [];
     const remaining = ev.issues_remaining || [];
 
+    document.getElementById('resultPanel').classList.add('show');
+    const container = document.getElementById('resultContent');
+
     let html = '';
 
     if (passed) {
-      // Update nav XP
       if (data.total_xp !== undefined) {
         document.getElementById('navXp').textContent = data.total_xp + ' XP';
       }
@@ -572,57 +460,41 @@
             <div class="result-score">${score}/100</div>
           </div>
           <div class="result-feedback">${feedback}</div>`;
+
       if (fixed.length > 0) {
-        html += `<div class="result-section-label c-green">Issues Fixed</div>
+        html += `
+          <div class="result-section-label c-green" style="margin-top:12px;">Issues Successfully Fixed</div>
           <div class="result-list">
-            ${fixed.map(f => `<div class="result-list-item"><div class="dot dot-green"></div>${f}</div>`).join('')}
+            ${fixed.map(item => `<div class="result-list-item"><div class="dot dot-green"></div><span>${item}</span></div>`).join('')}
           </div>`;
       }
       html += `</div>`;
-
-      // level up check
-      if (data.leveled_up && data.level_info) {
-        const toast = document.getElementById('levelUpToast');
-        toast.textContent = `🎉 Level Up! You are now ${data.level_info.title}!`;
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 5000);
-      }
-
-      document.getElementById('nextActions').style.display = 'block';
-      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('nextActions').style.display = 'flex';
 
     } else {
       html += `
         <div class="result-fail">
           <div class="result-header">
             <div class="result-icon">🔄</div>
-            <div class="result-title" style="color:var(--red);">Not quite yet…</div>
-            <div class="result-score">${score}/100</div>
+            <div class="result-title" style="color:var(--red);">Not quite there yet</div>
+            <div class="result-score" style="color:var(--red);">${score}/100</div>
           </div>
           <div class="result-feedback">${feedback}</div>`;
+
       if (remaining.length > 0) {
-        html += `<div class="result-section-label c-red">Still needs fixing</div>
+        html += `
+          <div class="result-section-label c-red" style="margin-top:12px;">Issues Remaining</div>
           <div class="result-list">
-            ${remaining.map(r => `<div class="result-list-item"><div class="dot dot-red"></div>${r}</div>`).join('')}
+            ${remaining.map(item => `<div class="result-list-item"><div class="dot dot-red"></div><span>${item}</span></div>`).join('')}
           </div>`;
       }
       html += `</div>`;
     }
 
-    const panel = document.getElementById('resultPanel');
-    document.getElementById('resultContent').innerHTML = html;
-    panel.classList.add('show');
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    container.innerHTML = html;
   }
 
-  // ── Init ───────────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', () => {
-    renderHints();
-    if (!IS_COMPLETED) {
-      const editor = document.getElementById('solutionEditor');
-      if (editor) updateCount();
-    }
-  });
+  window.addEventListener('load', renderHints);
 </script>
 </body>
 </html>

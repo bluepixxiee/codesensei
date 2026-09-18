@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file, after_this_request
 from dotenv import load_dotenv
 from datetime import datetime, date
 import tempfile
@@ -16,6 +16,11 @@ from modules.pdf_report import generate_pdf_report
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "ascend_secret_2024")
+if app.secret_key == "ascend_secret_2024":
+    print("WARNING: SECRET_KEY is not set - using the default fallback value. "
+          "Sessions can be forged with this value. Set the SECRET_KEY environment "
+          "variable before deploying to production.")
+
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///ascend.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -39,14 +44,18 @@ with app.app_context():
                 cur.execute("ALTER TABLE mission ADD COLUMN hints TEXT")
             if "what_to_learn" not in existing:
                 cur.execute("ALTER TABLE mission ADD COLUMN what_to_learn TEXT")
-            
-            # Auto-repair any old dummy missions created before prompt update
+
+            # Auto-repair any old dummy missions created before prompt update.
+            # NOTE: this must only match genuinely empty/placeholder buggy_code -
+            # a broad substring check (e.g. LIKE '%pass%') will also match real,
+            # AI-generated missions whose code legitimately contains "password",
+            # "bypass", etc., silently overwriting good mission content.
             from modules.missions import FALLBACK_MISSIONS
             for weakness, fb in FALLBACK_MISSIONS.items():
                 cur.execute("""
                     UPDATE mission 
                     SET buggy_code = ?, hints = ?, description = ?, what_to_learn = ? 
-                    WHERE weakness_type = ? AND (buggy_code LIKE '%pass%' OR LENGTH(buggy_code) < 30 OR hints IS NULL)
+                    WHERE weakness_type = ? AND (TRIM(buggy_code) = 'pass' OR LENGTH(buggy_code) < 30 OR hints IS NULL)
                 """, (fb["buggy_code"], json.dumps(fb["hints"]), fb["description"], fb["what_to_learn"], weakness))
             
             conn.commit()
@@ -175,7 +184,73 @@ def dashboard():
         earned_badge_ids = check_badges(user, reviews, 0, None)
         badges = get_badge_details(earned_badge_ids)
         active_missions = Mission.query.filter_by(user_id=user.id, is_completed=False).all()
-        completed_missions = Mission.query.filter_by(user_id=user.id, is_completed=True).count()
+        completed_missions = Mission.query.filter_by(user_id=user.id, is_completed=True).all()
+
+        # ── Analytics Calculations ────────────────────────────────────
+        has_reviews = len(reviews) > 0
+        total_bugs = sum(r.bug_count for r in reviews)
+        total_sec = sum(r.security_count for r in reviews)
+        total_perf = sum(r.performance_count for r in reviews)
+        total_style = sum(r.style_count for r in reviews)
+        total_all_issues = total_bugs + total_sec + total_perf + total_style
+
+        if has_reviews and total_all_issues > 0:
+            bug_pct = round((total_bugs / total_all_issues) * 100, 1)
+            sec_pct = round((total_sec / total_all_issues) * 100, 1)
+            perf_pct = round((total_perf / total_all_issues) * 100, 1)
+            style_pct = round((total_style / total_all_issues) * 100, 1)
+        else:
+            bug_pct = sec_pct = perf_pct = style_pct = 0.0
+
+        issue_breakdown = {
+            "bugs": total_bugs,
+            "security": total_sec,
+            "performance": total_perf,
+            "style": total_style,
+            "total": total_all_issues,
+            "bug_pct": bug_pct,
+            "sec_pct": sec_pct,
+            "perf_pct": perf_pct,
+            "style_pct": style_pct
+        }
+
+        if has_reviews:
+            avg_score = round(sum(r.overall_score for r in reviews) / len(reviews), 1)
+            streak_bonus = min(user.streak * 2, 10)
+            health_index = min(100, int(avg_score * 0.9 + streak_bonus))
+        else:
+            avg_score = 0
+            health_index = 0
+
+        sorted_reviews = sorted(reviews, key=lambda r: r.created_at or datetime.min)
+        recent_trend = sorted_reviews[-10:] if len(sorted_reviews) >= 2 else sorted_reviews
+        score_trends = [
+            {
+                "score": r.overall_score,
+                "date": r.created_at.strftime("%b %d") if r.created_at else "Review",
+                "lang": r.language
+            }
+            for r in recent_trend
+        ]
+
+        day_counts = {d: 0 for d in range(7)}
+        for r in reviews:
+            if r.created_at:
+                day_counts[r.created_at.weekday()] += 1
+        
+        day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        weekly_activity = [
+            {"day": day_names[i], "count": day_counts[i], "intensity": min(4, day_counts[i])}
+            for i in range(7)
+        ]
+
+        analytics = {
+            "issue_breakdown": issue_breakdown,
+            "health_index": health_index,
+            "score_trends": score_trends,
+            "weekly_activity": weekly_activity,
+            "avg_score": avg_score
+        }
 
         return render_template("dashboard.html",
             user=user,
@@ -184,8 +259,9 @@ def dashboard():
             mistakes=mistakes,
             badges=badges,
             active_missions=active_missions,
-            completed_missions=completed_missions,
-            levels=LEVELS
+            completed_missions=len(completed_missions),
+            levels=LEVELS,
+            analytics=analytics
         )
     except Exception as e:
         print(f"Dashboard error: {e}")
@@ -262,7 +338,7 @@ def report(review_id):
         return redirect(url_for("dashboard"))
     review_data = json.loads(rev.review_output)
     level_info = get_level_info(user.xp)
-    return render_template("report.html", user=user, review=rev, data=review_data, level_info=level_info)
+    return render_template("report.html", user=user, review=rev, result=review_data, level_info=level_info)
 
 # ── api routes ────────────────────────────────────────────
 @app.route("/api/review", methods=["POST"])
@@ -485,6 +561,16 @@ def download_report(review_id):
             issue_counts=counts,
             output_path=tmp_path
         )
+
+        # tmp_path must survive until Flask finishes streaming the response,
+        # so it's removed via after_this_request rather than immediately.
+        @after_this_request
+        def cleanup_temp_pdf(response):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+            return response
 
         return send_file(
             tmp_path,
