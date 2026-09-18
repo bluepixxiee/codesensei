@@ -21,16 +21,27 @@ if app.secret_key == "ascend_secret_2024":
           "Sessions can be forged with this value. Set the SECRET_KEY environment "
           "variable before deploying to production.")
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///ascend.db")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db_uri = os.environ.get("DATABASE_URL", "sqlite:///ascend.db")
+if db_uri.startswith("postgres://"):
+    db_uri = db_uri.replace("postgres://", "postgresql://", 1)
 
-if app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgres://"):
-    app.config["SQLALCHEMY_DATABASE_URI"] = app.config["SQLALCHEMY_DATABASE_URI"].replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
 
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as e:
+        print(f"DATABASE CONNECTION WARNING ({db_uri}): {e}")
+        if "sqlite" not in db_uri:
+            print("Falling back to local SQLite database: sqlite:///ascend.db")
+            app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ascend.db"
+            # Re-initialize engine with fallback SQLite URI
+            db.engine.dispose()
+            db.init_app(app)
+            db.create_all()
     # migrate existing SQLite DBs to add new columns without wiping data
     try:
         import sqlite3
