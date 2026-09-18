@@ -21,9 +21,22 @@ if app.secret_key == "ascend_secret_2024":
           "Sessions can be forged with this value. Set the SECRET_KEY environment "
           "variable before deploying to production.")
 
+import socket
+from urllib.parse import urlparse
+
 db_uri = os.environ.get("DATABASE_URL", "sqlite:///ascend.db")
 if db_uri.startswith("postgres://"):
     db_uri = db_uri.replace("postgres://", "postgresql://", 1)
+
+if db_uri.startswith("postgresql://"):
+    try:
+        parsed_url = urlparse(db_uri)
+        if parsed_url.hostname:
+            socket.gethostbyname(parsed_url.hostname)
+    except Exception as e:
+        print(f"DATABASE HOST RESOLUTION WARNING ({db_uri}): {e}")
+        print("Falling back to local SQLite database: sqlite:///ascend.db")
+        db_uri = "sqlite:///ascend.db"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -34,14 +47,7 @@ with app.app_context():
     try:
         db.create_all()
     except Exception as e:
-        print(f"DATABASE CONNECTION WARNING ({db_uri}): {e}")
-        if "sqlite" not in db_uri:
-            print("Falling back to local SQLite database: sqlite:///ascend.db")
-            app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ascend.db"
-            # Re-initialize engine with fallback SQLite URI
-            db.engine.dispose()
-            db.init_app(app)
-            db.create_all()
+        print(f"DATABASE CREATE_ALL WARNING: {e}")
     # migrate existing SQLite DBs to add new columns without wiping data
     try:
         import sqlite3
